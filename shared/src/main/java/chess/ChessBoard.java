@@ -41,7 +41,51 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        for (int i = 1; i < 9; i++) {
+            for (int j = 1; j < 9; j++) {
+                ChessPosition position = new ChessPosition(i, j);
+
+                if (i == 1 && (j == 1 || j == 8)) {
+                    ChessPiece blackRook = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK);
+                    addPiece(position, blackRook);
+                } else if (i == 1 && (j == 2 || j == 7)) {
+                    ChessPiece blackKnight = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT);
+                    addPiece(position, blackKnight);
+                } else if (i == 1 && (j == 3 || j == 6)) {
+                    ChessPiece blackBishop = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP);
+                    addPiece(position, blackBishop);
+                } else if (i == 1 && j == 4) {
+                    ChessPiece blackQueen = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN);
+                    addPiece(position, blackQueen);
+                } else if (i == 1) {
+                    ChessPiece blackKing = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING);
+                    addPiece(position, blackKing);
+                } else if (i == 2) {
+                    ChessPiece blackPawn = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
+                    addPiece(position, blackPawn);
+                } else if (i == 7) {
+                    ChessPiece whitePawn = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN);
+                    addPiece(position, whitePawn);
+                } else if (i == 8 && (j == 1 || j == 8)) {
+                    ChessPiece whiteRook = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK);
+                    addPiece(position, whiteRook);
+                } else if (i == 8 && (j == 2 || j == 7)) {
+                    ChessPiece whiteKnight = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT);
+                    addPiece(position, whiteKnight);
+                } else if (i == 8 && (j == 3 || j == 6)) {
+                    ChessPiece whiteBishop = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP);
+                    addPiece(position, whiteBishop);
+                } else if (i == 8 && j == 4) {
+                    ChessPiece whiteQueen = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN);
+                    addPiece(position, whiteQueen);
+                } else if (i == 8) {
+                    ChessPiece whiteKing = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING);
+                    addPiece(position, whiteKing);
+                } else {
+                    addPiece(position, null);
+                }
+            }
+        }
     }
 
     @Override
