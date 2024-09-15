@@ -31,7 +31,7 @@ public class PawnMoves extends MoveCalculator {
         ChessPosition nextPosition = new ChessPosition(nextRow, nextCol);
         ChessMove nextMove = new ChessMove(position, nextPosition, null);
 
-        if (position.getColumn() <= 8 && position.getRow() <= 8 && position.getColumn() >= 1 && position.getRow() >= 1) {
+        if (nextPosition.getColumn() <= 8 && nextPosition.getRow() <= 8 && nextPosition.getColumn() >= 1 && nextPosition.getRow() >= 1) {
             ChessPiece nextPiece = board.getPiece(nextPosition);
             if (nextPiece == null) {
                 if (nextMove.getEndPosition().getRow() == 8 || nextMove.getEndPosition().getRow() == 1) {
@@ -56,7 +56,7 @@ public class PawnMoves extends MoveCalculator {
         ChessPosition nextPosition = new ChessPosition(nextRow, nextCol);
         ChessMove nextMove = new ChessMove(position, nextPosition, null);
 
-        if (position.getColumn() <= 8 && position.getRow() <= 8 && position.getColumn() >= 1 && position.getRow() >= 1) {
+        if (nextPosition.getColumn() <= 8 && nextPosition.getRow() <= 8 && nextPosition.getColumn() >= 1 && nextPosition.getRow() >= 1) {
             ChessPiece nextPiece = board.getPiece(nextPosition);
             if (nextPiece != null) {
                 if (nextPiece.getTeamColor() != piece.getTeamColor()) {
