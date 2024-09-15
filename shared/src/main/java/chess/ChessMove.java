@@ -29,7 +29,11 @@ public class ChessMove {
 
     @Override
     public String toString() {
-        return endPosition.toString();
+        if (promotionPiece != null) {
+            return "Start: " + startPosition.toString() + ", End: " + endPosition.toString() + ", Promotion: " + promotionPiece.name();
+        } else {
+            return "Start: " + startPosition.toString() + ", End: " + endPosition.toString();
+        }
     }
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
