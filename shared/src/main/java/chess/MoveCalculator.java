@@ -4,61 +4,59 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class MoveCalculator {
-    public final ChessPiece piece;
+    public final ChessGame.TeamColor pieceColor;
+    public final ChessPiece.PieceType type;
     public final ChessBoard board;
     public final ChessPosition position;
 
-    public MoveCalculator(ChessPiece piece, ChessBoard board, ChessPosition position) {
-        this.piece = piece;
+    public MoveCalculator(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type, ChessBoard board, ChessPosition position) {
+        this.pieceColor = pieceColor;
+        this.type = type;
         this.board = board;
         this.position = position;
     }
 
     public Collection<ChessMove> getMoves() {
-        if (piece.getPieceType() == ChessPiece.PieceType.BISHOP) {
-            BishopMoves bishopMoves = new BishopMoves(piece, board, position);
-            return bishopMoves.getBishopMoves();
-        } else if (piece.getPieceType() == ChessPiece.PieceType.KING) {
-            KingMoves kingMoves = new KingMoves(piece, board, position);
-            return kingMoves.getKingMoves();
-        } else if (piece.getPieceType() == ChessPiece.PieceType.KNIGHT) {
-            KnightMoves knightMoves = new KnightMoves(piece, board, position);
-            return knightMoves.getKnightMoves();
-        } else if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
-            PawnMoves pawnMoves = new PawnMoves(piece, board, position);
-            return pawnMoves.getPawnMoves();
-        } else if (piece.getPieceType() == ChessPiece.PieceType.QUEEN) {
-            QueenMoves queenMoves = new QueenMoves(piece, board, position);
-            return queenMoves.getQueenMoves();
-        } else if (piece.getPieceType() == ChessPiece.PieceType.ROOK) {
-            RookMoves rookMoves = new RookMoves(piece, board, position);
-            return rookMoves.getRookMoves();
+        if (type == ChessPiece.PieceType.BISHOP) {
+            BishopMoves bishop = new BishopMoves(pieceColor, type, board, position);
+            return bishop.getBishopMoves();
+        }
+        else if (type == ChessPiece.PieceType.KNIGHT) {
+            KnightMoves knight = new KnightMoves(pieceColor, type, board, position);
+            return knight.getKnightMoves();
+        } else if (type == ChessPiece.PieceType.KING) {
+            KingMoves king = new KingMoves(pieceColor, type, board, position);
+            return king.getKingMoves();
+        } else if (type == ChessPiece.PieceType.ROOK) {
+            RookMoves rook = new RookMoves(pieceColor, type, board, position);
+            return rook.getRookMoves();
+        } else if (type == ChessPiece.PieceType.QUEEN) {
+            QueenMoves queen = new QueenMoves(pieceColor, type, board, position);
+            return queen.getQueenMoves();
+        } else if (type == ChessPiece.PieceType.PAWN) {
+            PawnMoves pawn = new PawnMoves(pieceColor, type, board, position);
+            return pawn.getPawnMoves();
         } else {
             return new ArrayList<>();
         }
     }
 
-    public boolean moveBlocked(ChessPosition position) {
-        if (position.getColumn() > 8 || position.getRow() > 8) {
-            return true;
-        } else if (position.getColumn() < 1 || position.getRow() < 1) {
-            return true;
-        }
-
-        ChessPiece nextPiece = board.getPiece(position);
-        if (nextPiece == null) {
-            return false;
-        } else {
-            return piece.getTeamColor() == nextPiece.getTeamColor();
-        }
+    public boolean inBounds(ChessPosition position) {
+        return (position.getRow() <= 8 && position.getColumn() <= 8 && position.getRow() >= 1 && position.getColumn() >= 1);
     }
 
-    public boolean canTakePiece(ChessPosition position) {
+    public boolean isOccupied(ChessPosition position) {
         ChessPiece nextPiece = board.getPiece(position);
-        if (nextPiece == null) {
+        return nextPiece != null;
+    }
+
+    public boolean isSameColor(ChessPosition position, ChessGame.TeamColor color) {
+        ChessPiece nextPiece = board.getPiece(position);
+
+        if (nextPiece != null) {
+            return nextPiece.getTeamColor() == color;
+        } else {
             return false;
         }
-
-        return piece.getTeamColor() != nextPiece.getTeamColor();
     }
 }

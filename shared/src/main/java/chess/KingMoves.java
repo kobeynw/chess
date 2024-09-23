@@ -4,34 +4,43 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class KingMoves extends MoveCalculator {
-    private final Collection<ChessMove> moves = new ArrayList<>();
+    public Collection<ChessMove> moves = new ArrayList<>();
 
-    public KingMoves(ChessPiece piece, ChessBoard board, ChessPosition position) {
-        super(piece, board, position);
+    public KingMoves(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type, ChessBoard board, ChessPosition position) {
+        super(pieceColor, type, board, position);
     }
 
     public Collection<ChessMove> getKingMoves() {
         int row = position.getRow();
         int col = position.getColumn();
 
-        for (int i = 0; i <= 1; i++) {
-            for (int j = 0; j <= 1; j++) {
-                checkPosition(row + i, col + j);
-                checkPosition(row + i, col - j);
-                checkPosition(row - i, col + j);
-                checkPosition(row - i, col - j);
-            }
-        }
+
+        checkPosition(row + 1, col + 1);
+        checkPosition(row + 1, col - 1);
+        checkPosition(row - 1, col + 1);
+        checkPosition(row - 1, col - 1);
+
+        checkPosition(row + 1, col);
+        checkPosition(row, col + 1);
+        checkPosition(row - 1, col);
+        checkPosition(row, col - 1);
 
         return moves;
     }
 
-    private void checkPosition(int nextRow, int nextCol) {
-        ChessPosition nextPosition = new ChessPosition(nextRow, nextCol);
-        ChessMove nextMove = new ChessMove(position, nextPosition, null);
+    private void checkPosition(int row, int col) {
+        ChessPosition nextPosition = new ChessPosition(row, col);
 
-        if (!moveBlocked(nextPosition)) {
-            moves.add(nextMove);
+        if (inBounds(nextPosition)) {
+            ChessMove nextMove = new ChessMove(position, nextPosition, null);
+
+            if (isOccupied(nextPosition)) {
+                if (!isSameColor(nextPosition, pieceColor)) {
+                    moves.add(nextMove);
+                }
+            } else {
+                moves.add(nextMove);
+            }
         }
     }
 }
