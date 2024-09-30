@@ -92,6 +92,21 @@ public class ChessGame {
         }
     }
 
+    private ChessPosition getKingPosition(TeamColor color) {
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
+                ChessPosition position = new ChessPosition(i, j);
+                ChessPiece piece = this.board.getPiece(position);
+
+                if (piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == color) {
+                    return position;
+                }
+            }
+        }
+
+        return new ChessPosition(1, 5);
+    }
+
     /**
      * Determines if the given team is in check
      *
@@ -99,10 +114,10 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         // Check if any of the opposing team could capture king on next turn
         // Cycle through opposing team pieces, copy a board, check if possible moves'
         //      end position includes king position
+        ChessPosition kingPosition = getKingPosition(teamColor);
     }
 
     /**
@@ -112,9 +127,9 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         // Cycle through king's possible moves, copy a board, check if king is still in
         //      check after moving to every move
+        ChessPosition kingPosition = getKingPosition(teamColor);
     }
 
     /**
@@ -125,9 +140,9 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         // Cycle through king's possible moves, copy a board, check if king is in check
         //      after moving to every move
+        ChessPosition kingPosition = getKingPosition(teamColor);
     }
 
     /**
