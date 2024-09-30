@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -48,7 +49,21 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = this.board.getPiece(startPosition);
+        Collection<ChessMove> moves = new ArrayList<>();
+
+        if (piece == null) {
+            return null;
+        }
+
+        if (piece.getTeamColor() == this.teamTurn) {
+            // Create collection using ChessPiece.pieceMoves() based on type of piece at startPosition
+            moves = piece.pieceMoves(this.board, startPosition);
+
+            // TODO: Check if any move will put King in check, and remove from collection if so
+        }
+
+        return moves;
     }
 
     /**
@@ -58,7 +73,23 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+        ChessPiece.PieceType promotionPiece = move.getPromotionPiece();
+        ChessPiece piece = this.board.getPiece(startPosition);
+        Collection<ChessMove> validMoves = validMoves(startPosition);
+
+        if (validMoves != null && !validMoves.isEmpty()) {
+            this.board.addPiece(startPosition, null);
+
+            if (promotionPiece != null) {
+                piece = new ChessPiece(piece.getTeamColor(), promotionPiece);
+            }
+
+            this.board.addPiece(endPosition, piece);
+        } else {
+            throw new InvalidMoveException();
+        }
     }
 
     /**
@@ -69,6 +100,9 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
+        // Check if any of the opposing team could capture king on next turn
+        // Cycle through opposing team pieces, copy a board, check if possible moves'
+        //      end position includes king position
     }
 
     /**
@@ -79,6 +113,8 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
+        // Cycle through king's possible moves, copy a board, check if king is still in
+        //      check after moving to every move
     }
 
     /**
@@ -90,6 +126,8 @@ public class ChessGame {
      */
     public boolean isInStalemate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
+        // Cycle through king's possible moves, copy a board, check if king is in check
+        //      after moving to every move
     }
 
     /**
