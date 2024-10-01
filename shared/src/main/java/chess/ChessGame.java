@@ -171,7 +171,23 @@ public class ChessGame {
     }
 
     private boolean testPossibleEscape(ChessMove possibleMove, ChessPiece piece, TeamColor teamColor) {
-        return true;
+        boolean possibleCheck = false;
+        ChessPiece pieceToReplace = this.board.getPiece(possibleMove.getEndPosition());
+        this.board.addPiece(possibleMove.getStartPosition(), null);
+        this.board.addPiece(possibleMove.getEndPosition(), piece);
+
+        try {
+            this.makeMove(possibleMove);
+        } catch (InvalidMoveException _) {}
+
+        if (!isInCheck(teamColor)) {
+            possibleCheck = true;
+        }
+
+        this.board.addPiece(possibleMove.getStartPosition(), piece);
+        this.board.addPiece(possibleMove.getEndPosition(), pieceToReplace);
+
+        return possibleCheck;
     }
 
     /**
