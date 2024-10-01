@@ -178,7 +178,9 @@ public class ChessGame {
 
         try {
             this.makeMove(possibleMove);
-        } catch (InvalidMoveException _) {}
+        } catch (InvalidMoveException e) {
+            // Not necessary to catch exception
+        }
 
         if (!isInCheck(teamColor)) {
             possibleCheck = true;
