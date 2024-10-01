@@ -233,7 +233,24 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        return true;
+        ChessPosition kingPosition = getKingPosition(teamColor);
+        if (isInCheck(teamColor) || kingPosition == null) {
+            return false;
+        }
+
+        boolean isInStalemate = false;
+        ChessPiece kingPiece = this.board.getPiece(kingPosition);
+        Collection<ChessMove> moves = kingPiece.pieceMoves(this.board, kingPosition);
+
+        for (ChessMove possibleMove : moves) {
+            if (testPossibleEscape(possibleMove, kingPiece, teamColor)) {
+                return false;
+            } else {
+                isInStalemate = true;
+            }
+        }
+
+        return isInStalemate;
     }
 
     /**
