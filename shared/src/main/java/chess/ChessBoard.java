@@ -28,6 +28,21 @@ public class ChessBoard {
         return Arrays.deepHashCode(board);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                output.append(" ");
+                output.append(board[i][j]);
+            }
+            output.append("  | ");
+        }
+
+        return output.toString();
+    }
+
     /**
      * Adds a chess piece to the chessboard
      *
