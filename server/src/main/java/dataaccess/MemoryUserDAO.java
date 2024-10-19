@@ -16,7 +16,7 @@ public class MemoryUserDAO implements UserDAO {
         // TESTING ONLY
     }
 
-    public UserData getUser(String username, String password) throws DataAccessException {
+    public UserData getUser(String username, String password) {
         for (UserData userData : userDataStorage) {
             if (Objects.equals(userData.username(), username) && Objects.equals(userData.password(), password)) {
                 return userData;

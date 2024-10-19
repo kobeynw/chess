@@ -3,6 +3,7 @@ package service;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryUserDAO;
+import dataaccess.UnauthorizedException;
 import model.AuthData;
 import model.UserData;
 import request.LoginRequest;
@@ -14,8 +15,12 @@ public class UserService extends Services {
 
     public UserService() {}
 
-    public LoginResult loginService(LoginRequest loginRequest) throws DataAccessException {
+    public LoginResult loginService(LoginRequest loginRequest) throws UnauthorizedException, DataAccessException {
         UserData userData = validateUser(loginRequest);
+
+        if (userData == null) {
+            throw new UnauthorizedException("unauthorized");
+        }
 
         MemoryAuthDAO authDao = new MemoryAuthDAO();
         AuthData authData = authDao.createAuth(userData);
@@ -26,17 +31,12 @@ public class UserService extends Services {
         return new LoginResult(username, authToken);
     }
 
-    private UserData validateUser(LoginRequest loginRequest) throws DataAccessException {
+    private UserData validateUser(LoginRequest loginRequest) {
         String username = loginRequest.username();
         String password = loginRequest.password();
 
         MemoryUserDAO userDao = new MemoryUserDAO();
-        UserData userData = userDao.getUser(username, password);
 
-        if (userData == null) {
-            throw new DataAccessException("Invalid User");
-        } else {
-            return userData;
-        }
+        return userDao.getUser(username, password);
     }
 }

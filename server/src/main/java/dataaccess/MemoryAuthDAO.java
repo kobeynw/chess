@@ -13,9 +13,14 @@ public class MemoryAuthDAO implements AuthDAO {
 
     public MemoryAuthDAO() {}
 
-    public AuthData createAuth(UserData userData) {
+    public AuthData createAuth(UserData userData) throws DataAccessException {
         String authToken = UUID.randomUUID().toString();
         AuthData authData = new AuthData(authToken, userData.username());
+
+        if (authDataStorage.contains(authData)) {
+            throw new DataAccessException("Duplicate Auth Token");
+        }
+
         authDataStorage.add(authData);
 
         return authData;
