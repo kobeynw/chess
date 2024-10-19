@@ -2,21 +2,24 @@ package handler;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UnauthorizedException;
+import dataaccess.UserDAO;
 import request.LoginRequest;
 import result.LoginResult;
 import service.UserService;
 import spark.*;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-
 public class LoginHandler extends Handlers {
     // NOTE: utilize the serialization/deserialization from the Handlers parent class
+    UserDAO userDao;
+    AuthDAO authDao;
 
-    public LoginHandler() {}
+    public LoginHandler(UserDAO userDao, AuthDAO authDao) {
+        this.userDao = userDao;
+        this.authDao = authDao;
+    }
 
     public Object handleRequest(Request req, Response res) {
         try {
@@ -26,7 +29,7 @@ public class LoginHandler extends Handlers {
             String password = bodyJsonObject.get("password").getAsString();
             LoginRequest loginRequest = new LoginRequest(username, password);
 
-            UserService userService = new UserService();
+            UserService userService = new UserService(userDao, authDao);
             LoginResult loginResult = userService.loginService(loginRequest);
 
             String resultBody = new Gson().toJson(loginResult);

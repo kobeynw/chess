@@ -36,6 +36,17 @@ public class MemoryAuthDAO implements AuthDAO {
         return null;
     }
 
+    public boolean deleteAuth(AuthData authData) {
+        for (AuthData currentAuthData : authDataStorage) {
+            if (Objects.equals(currentAuthData, authData)) {
+                authDataStorage.remove(authData);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void clearData() {
         authDataStorage = new ArrayList<>();
     }

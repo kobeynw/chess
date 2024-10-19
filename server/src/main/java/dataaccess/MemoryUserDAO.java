@@ -9,12 +9,7 @@ import java.util.Objects;
 public class MemoryUserDAO implements UserDAO {
     private Collection<UserData> userDataStorage = new ArrayList<>();
 
-    public MemoryUserDAO() {
-        // TESTING ONLY
-        UserData defaultData = new UserData("username", "password", "email");
-        userDataStorage.add(defaultData);
-        // TESTING ONLY
-    }
+    public MemoryUserDAO() {}
 
     public UserData getUser(String username, String password) {
         for (UserData userData : userDataStorage) {

@@ -1,12 +1,48 @@
 package handler;
 
-public class LogoutHandler extends Handlers {
-    // Basic Outline:
-    // Deserialize JSON request body to Java request object
-    // Call service class to perform the requested function, passing it the Java request object
-    // Receive Java response object
-    // Serialize java response object to JSON
-    // Send HTTP response back to client with appropriate status code and response body
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
+import dataaccess.UnauthorizedException;
+import dataaccess.UserDAO;
+import request.LogoutRequest;
+import result.LogoutResult;
+import service.UserService;
+import spark.Request;
+import spark.Response;
 
-    // NOTE: utilize the serialization/deserialization from the Handlers parent class
+public class LogoutHandler extends Handlers {
+    UserDAO userDao;
+    AuthDAO authDao;
+
+    public LogoutHandler(UserDAO userDao, AuthDAO authDao) {
+        this.userDao = userDao;
+        this.authDao = authDao;
+    }
+
+    public Object handleRequest(Request req, Response res) {
+        try {
+            JsonObject headerJsonObject = serialize(req, "headers");
+
+            String authToken = headerJsonObject.get("authToken").getAsString();
+            LogoutRequest logoutRequest = new LogoutRequest(authToken);
+
+            UserService userService = new UserService(userDao, authDao);
+            LogoutResult logoutResult = userService.logoutService(logoutRequest);
+
+            String resultBody = new Gson().toJson(logoutResult);
+            res.status(200);
+
+            return resultBody;
+        } catch (UnauthorizedException e) {
+            res.status(401);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (DataAccessException e) {
+            res.status(500);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        }
+    }
 }

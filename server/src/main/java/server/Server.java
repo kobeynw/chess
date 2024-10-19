@@ -1,9 +1,20 @@
 package server;
 
+import dataaccess.*;
 import spark.*;
 import handler.*;
 
 public class Server {
+    UserDAO userDao;
+    AuthDAO authDao;
+    GameDAO gameDao;
+
+    public Server() {
+        // SPECIFY DATA ACCESS OBJECT TYPE (Memory or Database)
+        userDao = new MemoryUserDAO();
+        authDao = new MemoryAuthDAO();
+        gameDao = new MemoryGameDAO();
+    }
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
@@ -26,6 +37,8 @@ public class Server {
     }
 
     private void registerEndpoints() {
-        Spark.post("/session", (req, res) -> (new LoginHandler()).handleRequest(req, res));
+        Spark.post("/user", (req, res) -> (new RegisterHandler(userDao, authDao)).handleRequest(req, res));
+        Spark.post("/session", (req, res) -> (new LoginHandler(userDao, authDao)).handleRequest(req, res));
+        Spark.delete("/session", (req, res) -> (new LogoutHandler(userDao, authDao)).handleRequest(req, res));
     }
 }

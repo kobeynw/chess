@@ -4,7 +4,7 @@ import model.UserData;
 
 public interface UserDAO {
 
-    UserData getUser(String username, String password) throws DataAccessException;
+    UserData getUser(String username, String password);
 
     void createUser(UserData userData);
 
