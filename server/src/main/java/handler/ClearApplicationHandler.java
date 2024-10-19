@@ -1,12 +1,39 @@
 package handler;
 
-public class ClearApplicationHandler extends Handlers {
-    // Basic Outline:
-    // Deserialize JSON request body to Java request object
-    // Call service class to perform the requested function, passing it the Java request object
-    // Receive Java response object
-    // Serialize java response object to JSON
-    // Send HTTP response back to client with appropriate status code and response body
+import com.google.gson.Gson;
+import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
+import dataaccess.GameDAO;
+import dataaccess.UserDAO;
+import result.ClearApplicationResult;
+import service.ClearApplicationService;
+import spark.Request;
+import spark.Response;
 
-    // NOTE: utilize the serialization/deserialization from the Handlers parent class
+public class ClearApplicationHandler extends Handlers {
+    UserDAO userDao;
+    AuthDAO authDao;
+    GameDAO gameDao;
+
+    public ClearApplicationHandler(UserDAO userDao, AuthDAO authDao, GameDAO gameDao) {
+        this.userDao = userDao;
+        this.authDao = authDao;
+        this.gameDao = gameDao;
+    }
+
+    public Object handleRequest(Request req, Response res) {
+        try {
+            ClearApplicationService clearService = new ClearApplicationService(userDao, authDao, gameDao);
+            ClearApplicationResult clearResult = clearService.clearApplication();
+
+            String resultBody = new Gson().toJson(clearResult);
+            res.status(200);
+
+            return resultBody;
+        } catch (DataAccessException e) {
+            res.status(500);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        }
+    }
 }

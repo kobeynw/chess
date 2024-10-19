@@ -40,5 +40,6 @@ public class Server {
         Spark.post("/user", (req, res) -> (new RegisterHandler(userDao, authDao)).handleRequest(req, res));
         Spark.post("/session", (req, res) -> (new LoginHandler(userDao, authDao)).handleRequest(req, res));
         Spark.delete("/session", (req, res) -> (new LogoutHandler(userDao, authDao)).handleRequest(req, res));
+        Spark.delete("/db", (req, res) -> (new ClearApplicationHandler(userDao, authDao, gameDao)).handleRequest(req, res));
     }
 }
