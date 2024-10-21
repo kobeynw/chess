@@ -1,12 +1,73 @@
 package handler;
 
-public class JoinGameHandler extends Handlers {
-    // Basic Outline:
-    // Deserialize JSON request body to Java request object
-    // Call service class to perform the requested function, passing it the Java request object
-    // Receive Java response object
-    // Serialize java response object to JSON
-    // Send HTTP response back to client with appropriate status code and response body
+import chess.ChessGame;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import dataaccess.*;
+import request.JoinGameRequest;
+import result.JoinGameResult;
+import service.GameService;
+import spark.Request;
+import spark.Response;
 
-    // NOTE: utilize the serialization/deserialization from the Handlers parent class
+import java.util.Objects;
+
+public class JoinGameHandler extends Handlers {
+    GameDAO gameDao;
+    AuthDAO authDao;
+
+    public JoinGameHandler(GameDAO gameDao, AuthDAO authDao) {
+        this.gameDao = gameDao;
+        this.authDao = authDao;
+    }
+
+    public Object handleRequest(Request req, Response res) {
+        try {
+            JsonObject headerJsonObject = serialize(req, "headers");
+            JsonObject bodyJsonObject = serialize(req, "body");
+
+            String authToken = headerJsonObject.get("authToken").getAsString();
+            String playerColorString = bodyJsonObject.get("playerColor").getAsString();
+            String gameIDString = bodyJsonObject.get("gameID").getAsString();
+
+            JoinGameRequest joinGameRequest = getJoinRequest(authToken, playerColorString, gameIDString);
+
+            GameService gameService = new GameService(gameDao, authDao);
+            JoinGameResult joinGameResult = gameService.joinGameService(joinGameRequest);
+
+            String resultBody = new Gson().toJson(joinGameResult);
+            res.status(200);
+
+            return resultBody;
+        } catch (BadRequestException e) {
+            res.status(400);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (UnauthorizedException e) {
+            res.status(401);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (InfoTakenException e) {
+            res.status(403);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (DataAccessException e) {
+            res.status(500);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        }
+    }
+
+    private JoinGameRequest getJoinRequest(String authToken, String colorString, String gameIDString) {
+        int gameID = Integer.parseInt(gameIDString);
+
+        ChessGame.TeamColor playerColor;
+        if (Objects.equals(colorString, "BLACK")) {
+            playerColor = ChessGame.TeamColor.BLACK;
+        } else {
+            playerColor = ChessGame.TeamColor.WHITE;
+        }
+
+        return new JoinGameRequest(authToken, playerColor, gameID);
+    }
 }

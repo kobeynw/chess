@@ -46,7 +46,8 @@ public class MemoryGameDAO implements GameDAO {
         return newGameData;
     }
 
-    public void addPlayer(GameData gameData, String username, ChessGame.TeamColor playerColor) {
+    public void addPlayer(GameData gameData, String username, ChessGame.TeamColor playerColor)
+            throws DataAccessException, InfoTakenException {
         for (GameData currentGameData : gameDataStorage) {
             if (Objects.equals(gameData, currentGameData)) {
                 int currentGameID = currentGameData.gameID();
@@ -58,17 +59,22 @@ public class MemoryGameDAO implements GameDAO {
                 gameDataStorage.remove(currentGameData);
                 GameData newGameData;
 
-                if (playerColor == ChessGame.TeamColor.BLACK) {
+                if (playerColor == ChessGame.TeamColor.BLACK && Objects.equals(currentBlackUsername, "")) {
                     newGameData = new GameData(currentGameID, currentWhiteUsername, username, currentGameName,
                             currentChessGame);
-                } else {
+                } else if (playerColor == ChessGame.TeamColor.WHITE && Objects.equals(currentWhiteUsername, "")) {
                     newGameData = new GameData(currentGameID, username, currentBlackUsername, currentGameName,
                             currentChessGame);
+                } else {
+                    throw new InfoTakenException("already taken");
                 }
 
                 gameDataStorage.add(newGameData);
+                return;
             }
         }
+
+        throw new DataAccessException("Game Data Not Found");
     }
 
     public void clearData() {
