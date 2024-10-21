@@ -1,12 +1,52 @@
 package handler;
 
-public class CreateGameHandler extends Handlers {
-    // Basic Outline:
-    // Deserialize JSON request body to Java request object
-    // Call service class to perform the requested function, passing it the Java request object
-    // Receive Java response object
-    // Serialize java response object to JSON
-    // Send HTTP response back to client with appropriate status code and response body
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import dataaccess.*;
+import request.CreateGameRequest;
+import result.CreateGameResult;
+import service.GameService;
+import spark.Request;
+import spark.Response;
 
-    // NOTE: utilize the serialization/deserialization from the Handlers parent class
+public class CreateGameHandler extends Handlers {
+    GameDAO gameDao;
+    AuthDAO authDao;
+
+    public CreateGameHandler(GameDAO gameDao, AuthDAO authDao) {
+        this.gameDao = gameDao;
+        this.authDao = authDao;
+    }
+
+    public Object handleRequest(Request req, Response res) {
+        try {
+            JsonObject headerJsonObject = serialize(req, "headers");
+            JsonObject bodyJsonObject = serialize(req, "body");
+
+            String authToken = headerJsonObject.get("authToken").getAsString();
+            String gameName = bodyJsonObject.get("gameName").getAsString();
+
+            CreateGameRequest createGameRequest = new CreateGameRequest(authToken, gameName);
+
+            GameService gameService = new GameService(gameDao, authDao);
+            CreateGameResult createGameResult = gameService.createGameService(createGameRequest);
+
+            String resultBody = new Gson().toJson(createGameResult);
+            res.status(200);
+
+            return resultBody;
+        } catch (BadRequestException e) {
+            res.status(400);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (UnauthorizedException e) {
+            res.status(401);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        } catch (DataAccessException e) {
+            res.status(500);
+
+            return String.format("{ \"message\": \"Error: %s\" }", e.getMessage());
+        }
+    }
 }

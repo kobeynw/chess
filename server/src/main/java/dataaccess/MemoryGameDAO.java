@@ -39,7 +39,11 @@ public class MemoryGameDAO implements GameDAO {
     public GameData createNewGame(String gameName) {
         int gameID = 1234;
         // TODO: make the gameID a unique identifier similar to authTokens using UUID
-        return new GameData(gameID, "", "", gameName, new ChessGame());
+
+        GameData newGameData = new GameData(gameID, "", "", gameName, new ChessGame());
+        gameDataStorage.add(newGameData);
+
+        return newGameData;
     }
 
     public void addPlayer(GameData gameData, String username, ChessGame.TeamColor playerColor) {
