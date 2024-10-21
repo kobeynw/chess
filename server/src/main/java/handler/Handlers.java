@@ -15,7 +15,7 @@ public abstract class Handlers {
             return gson.fromJson(body, JsonObject.class);
         } else {
             String header = req.headers("authorization");
-            return gson.fromJson(String.format("{authToken: %s}", header), JsonObject.class);
+            return gson.fromJson(String.format("{authToken: \"%s\"}", header), JsonObject.class);
         }
     }
 }
