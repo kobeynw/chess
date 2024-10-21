@@ -23,6 +23,10 @@ public class CreateGameHandler extends Handlers {
             JsonObject headerJsonObject = serialize(req, "headers");
             JsonObject bodyJsonObject = serialize(req, "body");
 
+            if (headerJsonObject.get("authToken") == null || bodyJsonObject.get("gameName") == null) {
+                throw new BadRequestException("bad request");
+            }
+
             String authToken = headerJsonObject.get("authToken").getAsString();
             String gameName = bodyJsonObject.get("gameName").getAsString();
 

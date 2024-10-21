@@ -30,8 +30,6 @@ public class UserService extends Services {
 
         if (existingUserData != null) {
             throw new InfoTakenException("already taken");
-        } else if (username == null || password == null || email == null) {
-            throw new BadRequestException("bad request");
         }
 
         UserData newUserData = new UserData(username, password, email);

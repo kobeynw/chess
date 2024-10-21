@@ -22,6 +22,11 @@ public class RegisterHandler extends Handlers {
         try {
             JsonObject bodyJsonObject = serialize(req, "body");
 
+            if (bodyJsonObject.get("username") == null || bodyJsonObject.get("password") == null ||
+                    bodyJsonObject.get("email") == null) {
+                throw new BadRequestException("bad request");
+            }
+
             String username = bodyJsonObject.get("username").getAsString();
             String password = bodyJsonObject.get("password").getAsString();
             String email = bodyJsonObject.get("email").getAsString();

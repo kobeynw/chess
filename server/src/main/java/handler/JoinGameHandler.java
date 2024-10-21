@@ -26,6 +26,11 @@ public class JoinGameHandler extends Handlers {
             JsonObject headerJsonObject = serialize(req, "headers");
             JsonObject bodyJsonObject = serialize(req, "body");
 
+            if (headerJsonObject.get("authToken") == null || bodyJsonObject.get("playerColor") == null ||
+                    bodyJsonObject.get("gameID") == null) {
+                throw new BadRequestException("bad request");
+            }
+
             String authToken = headerJsonObject.get("authToken").getAsString();
             String playerColorString = bodyJsonObject.get("playerColor").getAsString();
             String gameIDString = bodyJsonObject.get("gameID").getAsString();
