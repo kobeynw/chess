@@ -52,7 +52,7 @@ public class MemoryGameDAO implements GameDAO {
             }
         }
 
-        GameData newGameData = new GameData(gameID, "", "", gameName, new ChessGame());
+        GameData newGameData = new GameData(gameID, null, null, gameName, new ChessGame());
         gameDataStorage.add(newGameData);
 
         return newGameData;
@@ -71,10 +71,10 @@ public class MemoryGameDAO implements GameDAO {
                 gameDataStorage.remove(currentGameData);
                 GameData newGameData;
 
-                if (playerColor == ChessGame.TeamColor.BLACK && Objects.equals(currentBlackUsername, "")) {
+                if (playerColor == ChessGame.TeamColor.BLACK && currentBlackUsername == null) {
                     newGameData = new GameData(currentGameID, currentWhiteUsername, username, currentGameName,
                             currentChessGame);
-                } else if (playerColor == ChessGame.TeamColor.WHITE && Objects.equals(currentWhiteUsername, "")) {
+                } else if (playerColor == ChessGame.TeamColor.WHITE && currentWhiteUsername == null) {
                     newGameData = new GameData(currentGameID, username, currentBlackUsername, currentGameName,
                             currentChessGame);
                 } else {
