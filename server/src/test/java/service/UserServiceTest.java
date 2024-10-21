@@ -26,7 +26,8 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testRegisterService() {
+    public void testRegisterService()
+            throws UnauthorizedException, InfoTakenException, BadRequestException, DataAccessException {
         String usernameExpected = "username";
         String password = "password";
         String email = "email@example.com";
@@ -35,18 +36,14 @@ public class UserServiceTest {
         RegisterRequest registerRequest = new RegisterRequest(usernameExpected, password, email);
         UserService userService = new UserService(new MemoryUserDAO(), new MemoryAuthDAO());
 
-        try {
-            RegisterResult registerResult = userService.registerService(registerRequest);
-            LoginResult loginResult = userService.loginService(loginRequest);
+        RegisterResult registerResult = userService.registerService(registerRequest);
+        LoginResult loginResult = userService.loginService(loginRequest);
 
-            String usernameOutput = registerResult.username();
-            String authTokenOutput = registerResult.authToken();
+        String usernameOutput = registerResult.username();
+        String authTokenOutput = registerResult.authToken();
 
-            Assertions.assertEquals(usernameOutput, usernameExpected);
-            Assertions.assertNotNull(authTokenOutput);
-        } catch (UnauthorizedException | InfoTakenException | BadRequestException | DataAccessException e) {
-            System.out.printf("{ \"message\": \"Error: %s\" }%n", e.getMessage());
-        }
+        Assertions.assertEquals(usernameOutput, usernameExpected);
+        Assertions.assertNotNull(authTokenOutput);
     }
 
     @Test

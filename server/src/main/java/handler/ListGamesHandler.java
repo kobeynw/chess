@@ -1,18 +1,13 @@
 package handler;
 
-import chess.ChessGame;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.*;
-import request.JoinGameRequest;
 import request.ListGamesRequest;
-import result.JoinGameResult;
 import result.ListGamesResult;
 import service.GameService;
 import spark.Request;
 import spark.Response;
-
-import java.util.Objects;
 
 public class ListGamesHandler extends Handlers {
     GameDAO gameDao;

@@ -11,7 +11,6 @@ import result.LogoutResult;
 import result.RegisterResult;
 
 public class UserService extends Services {
-    // NOTE: Implements login, logout, and register services
     // NOTE: Utilize the Services parent class to validate auth tokens
     UserDAO userDao;
     AuthDAO authDao;
@@ -31,7 +30,7 @@ public class UserService extends Services {
 
         if (existingUserData != null) {
             throw new InfoTakenException("already taken");
-        } else if (!isValidEmail(email)) {
+        } else if (username == null || password == null || email == null) {
             throw new BadRequestException("bad request");
         }
 
@@ -75,12 +74,5 @@ public class UserService extends Services {
         String password = loginRequest.password();
 
         return userDao.getUser(username, password);
-    }
-
-    private boolean isValidEmail(String email) {
-        // matches letters, numbers, "+", "_", ".", "-", followed by "@", followed by domain name, followed by ".<TLD>"
-        String regexPattern = "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9+_.-]+\\.[a-zA-Z0-9.-]+$";
-
-        return email.matches(regexPattern);
     }
 }
