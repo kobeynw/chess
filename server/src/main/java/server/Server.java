@@ -43,6 +43,7 @@ public class Server {
 
         Spark.post("/game", (req, res) -> (new CreateGameHandler(gameDao, authDao)).handleRequest(req, res));
         Spark.put("/game", (req, res) -> (new JoinGameHandler(gameDao, authDao)).handleRequest(req, res));
+        Spark.get("/game", (req, res) -> (new ListGamesHandler(gameDao, authDao)).handleRequest(req, res));
 
         Spark.delete("/db", (req, res) -> (new ClearApplicationHandler(userDao, authDao, gameDao)).handleRequest(req, res));
     }

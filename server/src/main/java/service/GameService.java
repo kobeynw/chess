@@ -6,8 +6,13 @@ import model.AuthData;
 import model.GameData;
 import request.CreateGameRequest;
 import request.JoinGameRequest;
+import request.ListGamesRequest;
 import result.CreateGameResult;
 import result.JoinGameResult;
+import result.ListGamesResult;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class GameService extends Services {
     GameDAO gameDao;
@@ -33,7 +38,6 @@ public class GameService extends Services {
         }
 
         GameData newGameData = gameDao.createNewGame(gameName);
-
         return new CreateGameResult(newGameData.gameID());
     }
 
@@ -55,7 +59,26 @@ public class GameService extends Services {
         String username = authData.username();
 
         gameDao.addPlayer(existingGameData, username, playerColor);
-
         return new JoinGameResult();
+    }
+
+    public ListGamesResult listGamesService(ListGamesRequest listGamesRequest)
+            throws UnauthorizedException, DataAccessException {
+        String authToken = listGamesRequest.authToken();
+        AuthData authData = authDao.getAuth(authToken);
+
+        if (authData == null) {
+            throw new UnauthorizedException("unauthorized");
+        }
+
+        Collection<GameData> gamesList = gameDao.getGamesList();
+        Collection<GameData> gamesListResultFormatted = new ArrayList<>();
+
+        for (GameData gameData : gamesList) {
+            gamesListResultFormatted.add(new GameData(gameData.gameID(), gameData.whiteUsername(),
+                    gameData.blackUsername(), gameData.gameName(), null));
+        }
+
+        return new ListGamesResult(gamesListResultFormatted);
     }
 }
