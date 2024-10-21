@@ -8,9 +8,13 @@ import java.util.Collection;
 import java.util.Objects;
 
 public class MemoryGameDAO implements GameDAO {
-    private Collection<GameData> gameDataStorage = new ArrayList<>();
+    private Collection<GameData> gameDataStorage;
+    private int[] gameIDs;
 
-    public MemoryGameDAO() {}
+    public MemoryGameDAO() {
+        gameDataStorage = new ArrayList<>();
+        gameIDs = new int[10000];
+    }
 
     public Collection<GameData> getGamesList() {
         return gameDataStorage;
@@ -37,8 +41,16 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     public GameData createNewGame(String gameName) {
-        int gameID = 1234;
-        // TODO: make the gameID a unique identifier similar to authTokens using UUID
+        int gameID = 1;
+
+        for (int i = 0; i < gameIDs.length; i++) {
+            if (gameIDs[i] != i + 1) {
+                gameIDs[i] = i + 1;
+                gameID = i + 1;
+
+                break;
+            }
+        }
 
         GameData newGameData = new GameData(gameID, "", "", gameName, new ChessGame());
         gameDataStorage.add(newGameData);
@@ -79,5 +91,6 @@ public class MemoryGameDAO implements GameDAO {
 
     public void clearData() {
         gameDataStorage = new ArrayList<>();
+        gameIDs = new int[10000];
     }
 }
