@@ -17,8 +17,14 @@ public class ChessBoard {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         ChessBoard that = (ChessBoard) o;
         return Objects.deepEquals(board, that.board);
     }
@@ -64,62 +70,62 @@ public class ChessBoard {
         return board[position.getRow()-1][position.getColumn()-1];
     }
 
+    private void addEdgePieces(int j, ChessPosition position, ChessGame.TeamColor color) {
+        if (j == 1 || j == 8) {
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.ROOK));
+        } else if (j == 2 || j == 7) {
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KNIGHT));
+        } else if (j == 3 || j == 6) {
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.BISHOP));
+        } else if (j == 4) {
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.QUEEN));
+        } else {
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KING));
+        }
+    }
+
+    private void addWhitePieces(int i, int j, ChessPosition position) {
+        ChessGame.TeamColor color = ChessGame.TeamColor.WHITE;
+
+        if (i == 1) {
+            // WHITE OTHERS
+            addEdgePieces(j, position, color);
+        } else {
+            // WHITE PAWNS
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.PAWN));
+        }
+    }
+
+    private void addBlackPieces(int i, int j, ChessPosition position) {
+        ChessGame.TeamColor color = ChessGame.TeamColor.BLACK;
+
+        if (i == 7) {
+            // BLACK PAWNS
+            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.PAWN));
+        } else {
+            // BLACK OTHERS
+            addEdgePieces(j, position, color);
+        }
+    }
+
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        ChessGame.TeamColor color;
-
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition position = new ChessPosition(i, j);
 
                 if (i <= 2) {
                     // WHITE PIECES
-                    color = ChessGame.TeamColor.WHITE;
-
-                    if (i == 1) {
-                        // WHITE OTHERS
-                        if (j == 1 || j == 8) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.ROOK));
-                        } else if (j == 2 || j == 7) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KNIGHT));
-                        } else if (j == 3 || j == 6) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.BISHOP));
-                        } else if (j == 4) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.QUEEN));
-                        } else {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KING));
-                        }
-                    } else {
-                        // WHITE PAWNS
-                        this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.PAWN));
-                    }
+                    addWhitePieces(i, j, position);
                 } else if (i <= 6) {
                     // MIDDLE SPACES
                     this.addPiece(position, null);
                 } else {
                     // BLACK PIECES
-                    color = ChessGame.TeamColor.BLACK;
-
-                    if (i == 7) {
-                        // BLACK PAWNS
-                        this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.PAWN));
-                    } else {
-                        // BLACK OTHERS
-                        if (j == 1 || j == 8) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.ROOK));
-                        } else if (j == 2 || j == 7) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KNIGHT));
-                        } else if (j == 3 || j == 6) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.BISHOP));
-                        } else if (j == 4) {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.QUEEN));
-                        } else {
-                            this.addPiece(position, new ChessPiece(color, ChessPiece.PieceType.KING));
-                        }
-                    }
+                    addBlackPieces(i, j, position);
                 }
             }
         }

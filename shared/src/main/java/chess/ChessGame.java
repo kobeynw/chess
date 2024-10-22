@@ -136,6 +136,22 @@ public class ChessGame {
         return null;
     }
 
+    private boolean isChecking(ChessPiece piece, ChessGame.TeamColor color, ChessPosition pos, ChessPosition kingPos) {
+        if (piece != null) {
+            if (piece.getTeamColor() != color) {
+                Collection<ChessMove> possibleMoves = piece.pieceMoves(this.board, pos);
+
+                for (ChessMove possibleMove : possibleMoves) {
+                    if (possibleMove.getEndPosition().equals(kingPos)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Determines if the given team is in check
      *
@@ -153,16 +169,8 @@ public class ChessGame {
                 ChessPosition position = new ChessPosition(i, j);
                 ChessPiece piece = this.board.getPiece(position);
 
-                if (piece != null) {
-                    if (piece.getTeamColor() != teamColor) {
-                        Collection<ChessMove> possibleMoves = piece.pieceMoves(this.board, position);
-
-                        for (ChessMove possibleMove : possibleMoves) {
-                            if (possibleMove.getEndPosition().equals(kingPosition)) {
-                                return true;
-                            }
-                        }
-                    }
+                if (isChecking(piece, teamColor, position, kingPosition)) {
+                    return true;
                 }
             }
         }
@@ -192,6 +200,20 @@ public class ChessGame {
         return possibleCheck;
     }
 
+    private boolean isAbleToEscape(ChessPiece piece, ChessGame.TeamColor color, ChessPosition pos) {
+        if (piece.getTeamColor() == color) {
+            Collection<ChessMove> possibleMoves = piece.pieceMoves(this.board, pos);
+
+            for (ChessMove possibleMove : possibleMoves) {
+                if (testPossibleEscape(possibleMove, piece, color)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Determines if the given team is in checkmate
      *
@@ -212,14 +234,8 @@ public class ChessGame {
                     continue;
                 }
 
-                if (piece.getTeamColor() == teamColor) {
-                    Collection<ChessMove> possibleMoves = piece.pieceMoves(this.board, position);
-
-                    for (ChessMove possibleMove : possibleMoves) {
-                        if (testPossibleEscape(possibleMove, piece, teamColor)) {
-                            return false;
-                        }
-                    }
+                if (isAbleToEscape(piece, teamColor, position)) {
+                    return false;
                 }
             }
         }

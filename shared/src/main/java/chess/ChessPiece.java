@@ -20,8 +20,14 @@ public class ChessPiece {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         ChessPiece that = (ChessPiece) o;
         return pieceColor == that.pieceColor && type == that.type;
     }
@@ -33,7 +39,7 @@ public class ChessPiece {
 
     @Override
     public String toString() {
-        return "{" + String.valueOf(pieceColor) + " " + type.name() + "}";
+        return "{" + pieceColor + " " + type.name() + "}";
     }
 
     /**
