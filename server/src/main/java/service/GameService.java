@@ -14,7 +14,7 @@ import result.ListGamesResult;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class GameService extends Services {
+public class GameService {
     GameDAO gameDao;
     AuthDAO authDao;
 

@@ -10,7 +10,7 @@ import result.LoginResult;
 import result.LogoutResult;
 import result.RegisterResult;
 
-public class UserService extends Services {
+public class UserService {
     // NOTE: Utilize the Services parent class to validate auth tokens
     UserDAO userDao;
     AuthDAO authDao;

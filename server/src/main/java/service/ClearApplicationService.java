@@ -6,7 +6,7 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import result.ClearApplicationResult;
 
-public class ClearApplicationService extends Services {
+public class ClearApplicationService {
     UserDAO userDao;
     AuthDAO authDao;
     GameDAO gameDao;
