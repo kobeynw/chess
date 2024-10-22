@@ -1,9 +1,7 @@
 package service;
 
 import dataaccess.*;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import request.LoginRequest;
@@ -12,26 +10,14 @@ import request.RegisterRequest;
 import result.LoginResult;
 import result.LogoutResult;
 import result.RegisterResult;
-import server.Server;
 
 public class UserServiceTest {
-    private static final Server server = new Server();
     private final MemoryUserDAO memoryUserDAO = new MemoryUserDAO();
     private final MemoryAuthDAO memoryAuthDAO = new MemoryAuthDAO();
     private final UserService userService = new UserService(memoryUserDAO, memoryAuthDAO);
     private final String username = "username";
     private final String password = "password";
     private final String email = "email@example.com";
-
-    @BeforeAll
-    public static void startServer() {
-        server.run(8080);
-    }
-
-    @AfterAll
-    public static void stopServer() {
-        server.stop();
-    }
 
     @Test
     public void testRegisterService() throws InfoTakenException, BadRequestException, DataAccessException {

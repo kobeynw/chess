@@ -2,35 +2,21 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.*;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import request.*;
 import result.*;
-import server.Server;
 import model.GameData;
 
 import java.util.Collection;
 
 public class GameServiceTest {
-    private static final Server server = new Server();
     private final MemoryUserDAO memoryUserDAO = new MemoryUserDAO();
     private final MemoryAuthDAO memoryAuthDAO = new MemoryAuthDAO();
     private final MemoryGameDAO memoryGameDAO = new MemoryGameDAO();
     private final UserService userService = new UserService(memoryUserDAO, memoryAuthDAO);
     private final GameService gameService = new GameService(memoryGameDAO, memoryAuthDAO);
-
-    @BeforeAll
-    public static void startServer() {
-        server.run(8080);
-    }
-
-    @AfterAll
-    public static void stopServer() {
-        server.stop();
-    }
 
     private String registerAndLogin() throws BadRequestException, DataAccessException, UnauthorizedException,
             InfoTakenException {
