@@ -23,7 +23,7 @@ public class DatabaseManager {
         CREATE TABLE IF NOT EXISTS Auth (
           `id` int NOT NULL AUTO_INCREMENT,
           `username` varchar(40) NOT NULL,
-          `authToken` varchar(50) NOT NULL,
+          `auth_token` varchar(50) NOT NULL,
           PRIMARY KEY (`id`)
         )
         """,

@@ -3,6 +3,7 @@ package dataaccess;
 import model.AuthData;
 import model.UserData;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 public class MySQLAuthDAO implements AuthDAO {
@@ -10,30 +11,73 @@ public class MySQLAuthDAO implements AuthDAO {
 
     public AuthData createAuth(UserData userData) throws DataAccessException {
         String authToken = UUID.randomUUID().toString();
-        AuthData authData = new AuthData(authToken, userData.username());
+        String username = userData.username();
 
-        // if database contains authData throw new DataAccessException("Duplicate Auth Token");
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT username, auth_token FROM Auth WHERE username=? AND auth_token=?";
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, authToken);
 
-        // otherwise add authData to the database
+                try (var result = preparedStatement.executeQuery()) {
+                    if (result.next()) {
+                        throw new DataAccessException("Duplicate Auth Token");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Select AuthData From Database: %s", e.getMessage()));
+        }
 
-        return authData;
+        return new AuthData(authToken, username);
     }
 
-    public AuthData getAuth(String authToken) {
-        // check all authData
-        // if an authData entry has the same authToken as the argument authToken, return it
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT username, auth_token FROM Auth WHERE auth_token=?";
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setString(1, authToken);
+
+                try (var result = preparedStatement.executeQuery()) {
+                    if (result.next()) {
+                        String usernameResult = result.getString("username");
+                        String authTokenResult = result.getString("auth_token");
+
+                        return new AuthData(authTokenResult, usernameResult);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Select AuthData From Database: %s", e.getMessage()));
+        }
 
         return null;
     }
 
-    public boolean deleteAuth(AuthData authData) {
-        // check all authData
-        // if an authData entry is the same as the argument authToken, remove it from the database and return true
+    public boolean deleteAuth(AuthData authData) throws DataAccessException {
+        String authToken = authData.authToken();
 
-        return false;
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "DELETE FROM Auth WHERE auth_token=?";
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setString(1, authToken);
+
+                int deletedRowCount = preparedStatement.executeUpdate();
+
+                return deletedRowCount == 1;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Select AuthData From Database: %s", e.getMessage()));
+        }
     }
 
-    public void clearData() {
-        // delete all authData entries
+    public void clearData() throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE Auth")) {
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Delete AuthData From Database: %s", e.getMessage()));
+        }
     }
 }

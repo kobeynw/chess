@@ -35,12 +35,12 @@ public class MySQLGameDAO implements GameDAO {
         // create a new gameData with gameName set to argument gameName
         // get the primary key gameID and create a new GameData object with gameID set to it
 
-        return newGameData;
+        return new GameData();
     }
 
     public void addPlayer(GameData gameData, String username, ChessGame.TeamColor playerColor)
             throws DataAccessException, InfoTakenException {
-        Int gameID = gameData.gameID();
+        int gameID = gameData.gameID();
 
         // check all gameData
         // if gameID matches argument gameData gameID, update the info with remaining argument values

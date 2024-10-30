@@ -9,9 +9,9 @@ public interface AuthDAO {
 
     AuthData createAuth(UserData userData) throws DataAccessException;
 
-    AuthData getAuth(String authToken);
+    AuthData getAuth(String authToken) throws DataAccessException;
 
-    boolean deleteAuth(AuthData authData);
+    boolean deleteAuth(AuthData authData) throws DataAccessException;
 
-    void clearData();
+    void clearData() throws DataAccessException;
 }
