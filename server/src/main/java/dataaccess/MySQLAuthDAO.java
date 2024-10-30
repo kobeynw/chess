@@ -5,8 +5,12 @@ import model.UserData;
 
 import java.util.UUID;
 
-public class MySQLAuthDAO {
-    public MySQLAuthDAO() {}
+public class MySQLAuthDAO implements AuthDAO {
+    private final DatabaseManager dbManager;
+
+    public MySQLAuthDAO(DatabaseManager dbManager) {
+        this.dbManager = dbManager;
+    }
 
     public AuthData createAuth(UserData userData) throws DataAccessException {
         String authToken = UUID.randomUUID().toString();

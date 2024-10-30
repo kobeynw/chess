@@ -8,6 +8,37 @@ public class DatabaseManager {
     private static final String USER;
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
+    private boolean isConfigured = false;
+
+    private final String[] createStatements = {
+        """
+        CREATE TABLE IF NOT EXISTS User (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `username` varchar(40) NOT NULL,
+          `password` varchar(40) NOT NULL,
+          `email` varchar(40) NOT NULL,
+          PRIMARY KEY (`id`)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS Auth (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `username` varchar(40) NOT NULL,
+          `authToken` varchar(50) NOT NULL,
+          PRIMARY KEY (`id`)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS Game (
+          `game_id` int NOT NULL AUTO_INCREMENT,
+          `white_username` varchar(40),
+          `black_username` varchar(40),
+          `game_name` varchar(40),
+          `game` varchar(40),
+          PRIMARY KEY (`game_id`)
+        )
+        """
+    };
 
     /*
      * Load the database information for the db.properties file.
@@ -67,6 +98,24 @@ public class DatabaseManager {
             return conn;
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
+        }
+    }
+
+    public void configureDatabase() throws DataAccessException {
+        if (!isConfigured) {
+            createDatabase();
+
+            try (var conn = getConnection()) {
+                for (var statement : createStatements) {
+                    try (var preparedStatement = conn.prepareStatement(statement)) {
+                        preparedStatement.executeUpdate();
+                    }
+                }
+
+                isConfigured = true;
+            } catch (SQLException ex) {
+                throw new DataAccessException(String.format("Unable to Configure Database: %s", ex.getMessage()));
+            }
         }
     }
 }

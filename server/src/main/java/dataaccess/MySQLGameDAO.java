@@ -3,13 +3,22 @@ package dataaccess;
 import chess.ChessGame;
 import model.GameData;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
-public class MySQLGameDAO {
-    public MySQLGameDAO() {}
+public class MySQLGameDAO implements GameDAO {
+    private final DatabaseManager dbManager;
+
+    public MySQLGameDAO(DatabaseManager dbManager) {
+        this.dbManager = dbManager;
+    }
 
     public Collection<GameData> getGamesList() {
+        Collection<GameData> gamesList = new ArrayList<>();
+
         // return all gameData entries
+
+        return gamesList;
     }
 
     public GameData getGame(String gameName) {
@@ -35,8 +44,10 @@ public class MySQLGameDAO {
 
     public void addPlayer(GameData gameData, String username, ChessGame.TeamColor playerColor)
             throws DataAccessException, InfoTakenException {
+        Int gameID = gameData.gameID();
+
         // check all gameData
-        // if all gameData info matches argument gameData info, update the info with remaining argument values
+        // if gameID matches argument gameData gameID, update the info with remaining argument values
 
         throw new DataAccessException("Game Data Not Found");
     }
