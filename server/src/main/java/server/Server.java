@@ -8,15 +8,14 @@ public class Server {
     UserDAO userDao;
     AuthDAO authDao;
     GameDAO gameDao;
-    DatabaseManager dbManager = new DatabaseManager();  // SPECIFIC TO MYSQL IMPLEMENTATION
 
     public Server() {
         try {
             // SPECIFY DATA ACCESS OBJECT TYPE (Memory or Database)
-            dbManager.configureDatabase();
-            userDao = new MySQLUserDAO(dbManager);
-            authDao = new MySQLAuthDAO(dbManager);
-            gameDao = new MySQLGameDAO(dbManager);
+            DatabaseManager.configureDatabase();
+            userDao = new MySQLUserDAO();
+            authDao = new MySQLAuthDAO();
+            gameDao = new MySQLGameDAO();
         } catch (DataAccessException e) {
             System.out.println(e.getMessage());
         }

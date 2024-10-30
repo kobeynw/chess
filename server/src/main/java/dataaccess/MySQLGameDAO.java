@@ -7,11 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class MySQLGameDAO implements GameDAO {
-    private final DatabaseManager dbManager;
-
-    public MySQLGameDAO(DatabaseManager dbManager) {
-        this.dbManager = dbManager;
-    }
+    public MySQLGameDAO() {}
 
     public Collection<GameData> getGamesList() {
         Collection<GameData> gamesList = new ArrayList<>();

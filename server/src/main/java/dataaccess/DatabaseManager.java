@@ -8,9 +8,8 @@ public class DatabaseManager {
     private static final String USER;
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
-    private boolean isConfigured = false;
 
-    private final String[] createStatements = {
+    private static final String[] createStatements = {
         """
         CREATE TABLE IF NOT EXISTS User (
           `id` int NOT NULL AUTO_INCREMENT,
@@ -101,21 +100,17 @@ public class DatabaseManager {
         }
     }
 
-    public void configureDatabase() throws DataAccessException {
-        if (!isConfigured) {
-            createDatabase();
+    public static void configureDatabase() throws DataAccessException {
+        createDatabase();
 
-            try (var conn = getConnection()) {
-                for (var statement : createStatements) {
-                    try (var preparedStatement = conn.prepareStatement(statement)) {
-                        preparedStatement.executeUpdate();
-                    }
+        try (var conn = getConnection()) {
+            for (var statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
                 }
-
-                isConfigured = true;
-            } catch (SQLException ex) {
-                throw new DataAccessException(String.format("Unable to Configure Database: %s", ex.getMessage()));
             }
+        } catch (SQLException ex) {
+            throw new DataAccessException(String.format("Unable to Configure Database: %s", ex.getMessage()));
         }
     }
 }
