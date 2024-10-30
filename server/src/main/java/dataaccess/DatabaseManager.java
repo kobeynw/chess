@@ -32,8 +32,8 @@ public class DatabaseManager {
           `game_id` int NOT NULL AUTO_INCREMENT,
           `white_username` varchar(40),
           `black_username` varchar(40),
-          `game_name` varchar(40),
-          `game` varchar(40),
+          `game_name` varchar(40) NOT NULL,
+          `game` varchar(40) NOT NULL,
           PRIMARY KEY (`game_id`)
         )
         """
