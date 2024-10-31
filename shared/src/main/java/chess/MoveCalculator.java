@@ -59,4 +59,48 @@ public class MoveCalculator {
             return false;
         }
     }
+
+    public Collection<ChessMove> checkLine(int row, int col, int rowSign, int colSign, Collection<ChessMove> moves) {
+        while (row <= 8 && col <= 8) {
+            row += rowSign;
+            col += colSign;
+
+            ChessPosition nextPosition = new ChessPosition(row, col);
+
+            if (inBounds(nextPosition)) {
+                ChessMove nextMove = new ChessMove(position, nextPosition, null);
+
+                if (isOccupied(nextPosition)) {
+                    if (!isSameColor(nextPosition, pieceColor)) {
+                        moves.add(nextMove);
+                    }
+                    break;
+                } else {
+                    moves.add(nextMove);
+                }
+            } else {
+                break;
+            }
+        }
+
+        return moves;
+    }
+
+    public Collection<ChessMove> checkPosition(int row, int col, Collection<ChessMove> moves) {
+        ChessPosition nextPosition = new ChessPosition(row, col);
+
+        if (inBounds(nextPosition)) {
+            ChessMove nextMove = new ChessMove(position, nextPosition, null);
+
+            if (isOccupied(nextPosition)) {
+                if (!isSameColor(nextPosition, pieceColor)) {
+                    moves.add(nextMove);
+                }
+            } else {
+                moves.add(nextMove);
+            }
+        }
+
+        return moves;
+    }
 }

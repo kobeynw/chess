@@ -39,11 +39,7 @@ public class PawnMoves extends MoveCalculator {
 
         if (inBounds(nextPosition)) {
             if (!isOccupied(nextPosition)) {
-                if ((row == 8 && color == ChessGame.TeamColor.WHITE) || (row == 1 && color == ChessGame.TeamColor.BLACK)) {
-                    addPromotions(position, nextPosition);
-                } else {
-                    moves.add(new ChessMove(position, nextPosition, null));
-                }
+                checkPromotion(row, color, nextPosition);
             }
         }
     }
@@ -52,11 +48,15 @@ public class PawnMoves extends MoveCalculator {
         ChessPosition nextPosition = new ChessPosition(row, col);
 
         if (inBounds(nextPosition) && isOccupied(nextPosition) && !isSameColor(nextPosition, color)) {
-            if ((row == 8 && color == ChessGame.TeamColor.WHITE) || (row == 1 && color == ChessGame.TeamColor.BLACK)) {
-                addPromotions(position, nextPosition);
-            } else {
-                moves.add(new ChessMove(position, nextPosition, null));
-            }
+            checkPromotion(row, color, nextPosition);
+        }
+    }
+
+    private void checkPromotion(int row, ChessGame.TeamColor color, ChessPosition nextPosition) {
+        if ((row == 8 && color == ChessGame.TeamColor.WHITE) || (row == 1 && color == ChessGame.TeamColor.BLACK)) {
+            addPromotions(position, nextPosition);
+        } else {
+            moves.add(new ChessMove(position, nextPosition, null));
         }
     }
 

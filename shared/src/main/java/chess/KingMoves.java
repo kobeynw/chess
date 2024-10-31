@@ -15,32 +15,16 @@ public class KingMoves extends MoveCalculator {
         int col = position.getColumn();
 
 
-        checkPosition(row + 1, col + 1);
-        checkPosition(row + 1, col - 1);
-        checkPosition(row - 1, col + 1);
-        checkPosition(row - 1, col - 1);
+        moves = checkPosition(row + 1, col + 1, moves);
+        moves = checkPosition(row + 1, col - 1, moves);
+        moves = checkPosition(row - 1, col + 1, moves);
+        moves = checkPosition(row - 1, col - 1, moves);
 
-        checkPosition(row + 1, col);
-        checkPosition(row, col + 1);
-        checkPosition(row - 1, col);
-        checkPosition(row, col - 1);
+        moves = checkPosition(row + 1, col, moves);
+        moves = checkPosition(row, col + 1, moves);
+        moves = checkPosition(row - 1, col, moves);
+        moves = checkPosition(row, col - 1, moves);
 
         return moves;
-    }
-
-    private void checkPosition(int row, int col) {
-        ChessPosition nextPosition = new ChessPosition(row, col);
-
-        if (inBounds(nextPosition)) {
-            ChessMove nextMove = new ChessMove(position, nextPosition, null);
-
-            if (isOccupied(nextPosition)) {
-                if (!isSameColor(nextPosition, pieceColor)) {
-                    moves.add(nextMove);
-                }
-            } else {
-                moves.add(nextMove);
-            }
-        }
     }
 }
