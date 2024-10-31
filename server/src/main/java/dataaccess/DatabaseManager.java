@@ -13,27 +13,27 @@ public class DatabaseManager {
         """
         CREATE TABLE IF NOT EXISTS User (
           `id` int NOT NULL AUTO_INCREMENT,
-          `username` varchar(40) NOT NULL,
-          `password` varchar(40) NOT NULL,
-          `email` varchar(40) NOT NULL,
+          `username` varchar(100) NOT NULL,
+          `password` varchar(200) NOT NULL,
+          `email` varchar(100) NOT NULL,
           PRIMARY KEY (`id`)
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS Auth (
           `id` int NOT NULL AUTO_INCREMENT,
-          `username` varchar(40) NOT NULL,
-          `auth_token` varchar(50) NOT NULL,
+          `username` varchar(100) NOT NULL,
+          `auth_token` varchar(100) NOT NULL,
           PRIMARY KEY (`id`)
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS Game (
           `game_id` int NOT NULL AUTO_INCREMENT,
-          `white_username` varchar(40),
-          `black_username` varchar(40),
-          `game_name` varchar(40) NOT NULL,
-          `game` varchar(40) NOT NULL,
+          `white_username` varchar(100),
+          `black_username` varchar(100),
+          `game_name` varchar(100) NOT NULL,
+          `game` varchar(10000) NOT NULL,
           PRIMARY KEY (`game_id`)
         )
         """
