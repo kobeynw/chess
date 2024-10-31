@@ -8,8 +8,6 @@ public class MySQLUserDAO implements UserDAO {
     public MySQLUserDAO() {}
 
     public UserData getUser(String username, String password) throws DataAccessException {
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT username, password, email FROM User WHERE username=?";
             try (var preparedStatement = conn.prepareStatement(statement)) {
