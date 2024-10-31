@@ -20,15 +20,10 @@ public class GameServiceTest {
 
     private String registerAndLogin() throws BadRequestException, DataAccessException, UnauthorizedException,
             InfoTakenException {
-        String username = "username";
-        String password = "password";
-        String email = "email@example.com";
-
-        RegisterRequest registerRequest = new RegisterRequest(username, password, email);
+        RegisterRequest registerRequest = new RegisterRequest("username", "password",
+                "email@example.com");
         RegisterResult registerResult = userService.registerService(registerRequest);
-
-        LoginRequest loginRequest = new LoginRequest(username, password);
-        LoginResult loginResult = userService.loginService(loginRequest);
+        LoginResult loginResult = userService.loginService(new LoginRequest("username", "password"));
 
         return loginResult.authToken();
     }

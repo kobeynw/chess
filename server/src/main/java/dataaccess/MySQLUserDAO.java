@@ -7,25 +7,29 @@ import java.sql.*;
 public class MySQLUserDAO implements UserDAO {
     public MySQLUserDAO() {}
 
+    private UserData fetchUserData(PreparedStatement preparedStatement, String password) throws SQLException {
+        try (var result = preparedStatement.executeQuery()) {
+            if (result.next()) {
+                String usernameResult = result.getString("username");
+                String passwordResult = result.getString("password");
+                String emailResult = result.getString("email");
+
+                if (BCrypt.checkpw(password, passwordResult)) {
+                    return new UserData(usernameResult, passwordResult, emailResult);
+                }
+            }
+
+            return null;
+        }
+    }
+
     public UserData getUser(String username, String password) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT username, password, email FROM User WHERE username=?";
             try (var preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, username);
 
-                try (var result = preparedStatement.executeQuery()) {
-                    if (result.next()) {
-                        String usernameResult = result.getString("username");
-                        String passwordResult = result.getString("password");
-                        String emailResult = result.getString("email");
-
-                        if (BCrypt.checkpw(password, passwordResult)) {
-                            return new UserData(usernameResult, passwordResult, emailResult);
-                        }
-                    }
-
-                    return null;
-                }
+                return fetchUserData(preparedStatement, password);
             }
         } catch (SQLException e) {
             throw new DataAccessException(String.format("Unable to Select UserData From Database: %s", e.getMessage()));
