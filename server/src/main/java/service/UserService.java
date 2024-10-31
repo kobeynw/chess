@@ -11,7 +11,6 @@ import result.LogoutResult;
 import result.RegisterResult;
 
 public class UserService {
-    // NOTE: Utilize the Services parent class to validate auth tokens
     UserDAO userDao;
     AuthDAO authDao;
 
@@ -67,7 +66,7 @@ public class UserService {
         return new LogoutResult();
     }
 
-    private UserData validateUser(LoginRequest loginRequest) {
+    private UserData validateUser(LoginRequest loginRequest) throws DataAccessException {
         String username = loginRequest.username();
         String password = loginRequest.password();
 

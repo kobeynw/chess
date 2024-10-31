@@ -14,19 +14,23 @@ public class MySQLAuthDAO implements AuthDAO {
         String username = userData.username();
 
         try (var conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT username, auth_token FROM Auth WHERE username=? AND auth_token=?";
+            AuthData existingAuthData = getAuth(authToken);
+            if (existingAuthData != null) {
+                throw new DataAccessException("Duplicate Auth Token");
+            }
+
+            var statement = "INSERT INTO Auth (username, auth_token) VALUES (?, ?)";
             try (var preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, authToken);
 
-                try (var result = preparedStatement.executeQuery()) {
-                    if (result.next()) {
-                        throw new DataAccessException("Duplicate Auth Token");
-                    }
+                int updatedRows = preparedStatement.executeUpdate();
+                if (updatedRows != 1) {
+                    throw new DataAccessException("Unable to Insert AuthData into Database");
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to Select AuthData From Database: %s", e.getMessage()));
+            throw new DataAccessException(String.format("Unable to Insert AuthData into Database: %s", e.getMessage()));
         }
 
         return new AuthData(authToken, username);

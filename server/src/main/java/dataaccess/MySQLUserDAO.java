@@ -21,7 +21,7 @@ public class MySQLUserDAO implements UserDAO {
                         String passwordResult = result.getString("password");
                         String emailResult = result.getString("email");
 
-                        if (BCrypt.checkpw(passwordResult, hashedPassword)) {
+                        if (BCrypt.checkpw(password, passwordResult)) {
                             return new UserData(usernameResult, passwordResult, emailResult);
                         }
                     }
@@ -41,7 +41,8 @@ public class MySQLUserDAO implements UserDAO {
         String email = userData.email();
 
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO User (username, password, email) VALUES (?, ?, ?)")) {
+            var statement = "INSERT INTO User (username, password, email) VALUES (?, ?, ?)";
+            try (var preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, hashedPassword);
                 preparedStatement.setString(3, email);
