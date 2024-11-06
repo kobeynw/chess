@@ -2,6 +2,8 @@ package ui;
 
 import static java.lang.System.out;
 import static java.lang.System.in;
+
+import java.util.Objects;
 import java.util.Scanner;
 
 import static ui.EscapeSequences.*;
@@ -117,7 +119,7 @@ public class ClientUI {
 
             postLoginDisplay();
         } else {
-            out.println("Login failed");
+            out.println("\nLogin failed");
         }
     }
 
@@ -129,7 +131,7 @@ public class ClientUI {
     }
 
     private static void quit() {
-        out.println("Thanks for playing!");
+        out.println("\nThanks for playing!");
     }
 
     private static void postLoginDisplay() {
@@ -139,7 +141,7 @@ public class ClientUI {
         postLoginHelp();
 
         while (isLoggedIn) {
-            out.print("[");
+            out.print("\n[");
             out.print(SET_TEXT_COLOR_GREEN);
             out.print("LOGGED IN");
             out.print(RESET_TEXT_COLOR);
@@ -183,27 +185,73 @@ public class ClientUI {
     }
 
     private static void logoutUser() {
-        out.println("Logged out");
+        out.println("\nSuccessfully logged out");
     }
 
     private static void createGame() {
-        out.println("Created game");
+        Scanner scanner = new Scanner(in);
+        String gameName = null;
+
+        out.print("Game Name >>> ");
+        if (scanner.hasNext()) {
+            gameName = scanner.next();
+        }
+
+        if (gameName != null) {
+            out.println("\nSuccessfully created game: '" + gameName + "'");
+        } else {
+            out.println("\nGame Creation failed");
+        }
     }
 
     private static void listGames() {
-        out.println("Games: None");
+        out.println("\nGames: None");
     }
 
     private static void playGame() {
-        out.println();
-        GameBoardUI.main(null);
-        out.println();
+        Scanner scanner = new Scanner(in);
+        int gameID = 0;
+        String color = null;
+
+        out.print("Game ID >>> ");
+        if (scanner.hasNextInt()) {
+            gameID = scanner.nextInt();
+        }
+
+        out.print("Color ('WHITE' or 'BLACK') >>> ");
+        if (scanner.hasNext()) {
+            String colorInput = scanner.next().toUpperCase();
+
+            if (Objects.equals(colorInput, "BLACK") || Objects.equals(colorInput, "WHITE")) {
+                color = colorInput;
+            }
+        }
+
+        if (gameID >= 1 && color != null) {
+            out.println();
+            GameBoardUI.main(null);
+            out.println();
+        } else {
+            out.println("\nGame join failed");
+        }
     }
 
     private static void observeGame() {
-        out.println();
-        GameBoardUI.main(null);
-        out.println();
+        Scanner scanner = new Scanner(in);
+        int gameID = 0;
+
+        out.print("Game ID >>> ");
+        if (scanner.hasNextInt()) {
+            gameID = scanner.nextInt();
+        }
+
+        if (gameID >= 1) {
+            out.println();
+            GameBoardUI.main(null);
+            out.println();
+        } else {
+            out.println("\nGame observation failed");
+        }
     }
 
     private static void postLoginHelp() {
