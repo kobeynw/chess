@@ -51,6 +51,9 @@ public class GameBoardUI {
         out.println();
         teamColor = TeamColor.WHITE;
         drawGame();
+
+        out.print(RESET_BG_COLOR);
+        out.print(RESET_TEXT_COLOR);
     }
 
     private static void drawGame() {
