@@ -13,7 +13,14 @@ public class ClientUI {
     }
 
     private static void welcomeMessage() {
-        out.println("Welcome to 240 Chess! Type the number of the option that you would like to select.");
+        out.print("Welcome to ");
+        out.print(SET_TEXT_BOLD);
+        out.print(SET_TEXT_COLOR_BLUE);
+        out.print("240 Chess");
+        out.print(RESET_TEXT_BOLD_FAINT);
+        out.print(RESET_TEXT_COLOR);
+        out.println("!");
+        out.println("Type the number of the option that you would like to select.");
     }
 
     private static void preLoginDisplay() {
@@ -33,21 +40,19 @@ public class ClientUI {
                 int input = scanner.nextInt();
 
                 switch (input) {
+                    case 0:
+                        out.println("\nType the number of the option that you would like to select.");
+                        preLoginHelp();
+                        break;
                     case 1:
                         registerUser();
-                        postLoginDisplay();
                         isExiting = true;
                         break;
                     case 2:
                         loginUser();
-                        postLoginDisplay();
                         isExiting = true;
                         break;
                     case 3:
-                        out.println("\nType the number of the option that you would like to select.");
-                        preLoginHelp();
-                        break;
-                    case 4:
                         quit();
                         isExiting = true;
                         break;
@@ -63,18 +68,64 @@ public class ClientUI {
     }
 
     private static void registerUser() {
-        out.println("Logged in");
+        Scanner scanner = new Scanner(in);
+        String username = null;
+        String password = null;
+        String email = null;
+
+        out.print("Username >>> ");
+        if (scanner.hasNext()) {
+            username = scanner.next();
+        }
+
+        out.print("Password >>> ");
+        if (scanner.hasNext()) {
+            password = scanner.next();
+        }
+
+        out.print("Email >>> ");
+        if (scanner.hasNext()) {
+            email = scanner.next();
+        }
+
+        if (username != null && password != null && email != null) {
+            out.println("\nSuccessfully logged in as " + username);
+
+            postLoginDisplay();
+        } else {
+            out.println("Login failed");
+        }
     }
 
     private static void loginUser() {
-        out.println("Logged in");
+        Scanner scanner = new Scanner(in);
+        String username = null;
+        String password = null;
+
+        out.print("Username >>> ");
+        if (scanner.hasNext()) {
+            username = scanner.next();
+        }
+
+        out.print("Password >>> ");
+        if (scanner.hasNext()) {
+            password = scanner.next();
+        }
+
+        if (username != null && password != null) {
+            out.println("\nSuccessfully logged in as " + username);
+
+            postLoginDisplay();
+        } else {
+            out.println("Login failed");
+        }
     }
 
     private static void preLoginHelp() {
-        out.println("\n1. Register");
+        out.println("\n0. Help");
+        out.println("1. Register");
         out.println("2. Login");
-        out.println("3. Help");
-        out.println("4. Quit");
+        out.println("3. Quit");
     }
 
     private static void quit() {
@@ -98,6 +149,10 @@ public class ClientUI {
                 int input = scanner.nextInt();
 
                 switch (input) {
+                    case 0:
+                        out.println("\nType the number of the option that you would like to select.");
+                        postLoginHelp();
+                        break;
                     case 1:
                         logoutUser();
                         isLoggedIn = false;
@@ -114,13 +169,8 @@ public class ClientUI {
                     case 5:
                         observeGame();
                         break;
-                    case 6:
-                        out.println("\nType the number of the option that you would like to select.");
-                        postLoginHelp();
-                        break;
                     default:
                         out.println("Please enter a valid number");
-                        scanner.next();
                         break;
                 }
             } else {
@@ -157,11 +207,11 @@ public class ClientUI {
     }
 
     private static void postLoginHelp() {
-        out.println("\n1. Logout");
+        out.println("\n0. Help");
+        out.println("1. Logout");
         out.println("2. Create Game");
         out.println("3. List Games");
         out.println("4. Play Game");
         out.println("5. Observe Game");
-        out.println("6. Help");
     }
 }
