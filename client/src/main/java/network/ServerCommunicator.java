@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import model.GameData;
-import result.*;
 import request.*;
+import result.*;
 
 import java.io.IOException;
 import java.io.InputStream;

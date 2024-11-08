@@ -1,8 +1,8 @@
 package network;
 
 import chess.ChessGame;
-import request.*;
 import result.*;
+import request.*;
 
 public class ServerFacade {
     private final ServerCommunicator comm = new ServerCommunicator();

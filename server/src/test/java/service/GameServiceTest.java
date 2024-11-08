@@ -5,9 +5,9 @@ import dataaccess.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import model.GameData;
 import request.*;
 import result.*;
-import model.GameData;
 
 import java.util.Collection;
 
