@@ -246,8 +246,8 @@ public class ClientUI {
 
     private static void listGames() {
         try {
-            ListGamesResult listGameResult = serverFacade.listGames(authToken);
-            Collection<GameData> games = listGameResult.games();
+            ListGamesResult listGamesResult = serverFacade.listGames(authToken);
+            Collection<GameData> games = listGamesResult.games();
             if (games.isEmpty()) {
                 printErrorMessage("No available games");
                 return;
