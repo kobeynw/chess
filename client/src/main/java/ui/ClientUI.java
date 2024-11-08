@@ -1,5 +1,8 @@
 package ui;
 
+import network.ServerFacade;
+import result.RegisterResult;
+
 import static java.lang.System.out;
 import static java.lang.System.in;
 
@@ -9,6 +12,9 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class ClientUI {
+    private static final ServerFacade serverFacade = new ServerFacade();
+    private static String authToken = null;
+
     public static void main(String[] args) {
         welcomeMessage();
         preLoginDisplay();
@@ -91,11 +97,18 @@ public class ClientUI {
         }
 
         if (username != null && password != null && email != null) {
-            out.println("\nSuccessfully logged in as " + username);
-
-            postLoginDisplay();
+            try {
+                RegisterResult registerResult = serverFacade.register(username, password, email);
+                authToken = registerResult.authToken();
+                out.println("\nSuccessfully logged in as " + registerResult.username());
+                postLoginDisplay();
+            } catch (Exception e) {
+                out.println(e.getMessage());
+                preLoginDisplay();
+            }
         } else {
             out.println("Login failed");
+            preLoginDisplay();
         }
     }
 
