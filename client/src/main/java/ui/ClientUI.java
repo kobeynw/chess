@@ -1,5 +1,6 @@
 package ui;
 
+import chess.ChessGame;
 import model.GameData;
 import network.ServerFacade;
 import result.*;
@@ -31,6 +32,12 @@ public class ClientUI {
         out.print(RESET_TEXT_COLOR);
         out.println("!");
         out.println("Type the number of the option that you would like to select.");
+    }
+
+    private static void printErrorMessage(String errorMsg) {
+        out.println(SET_TEXT_COLOR_RED);
+        out.println(errorMsg);
+        out.println(RESET_TEXT_COLOR);
     }
 
     private static void preLoginDisplay() {
@@ -67,11 +74,11 @@ public class ClientUI {
                         isExiting = true;
                         break;
                     default:
-                        out.println("Please enter a valid number");
+                        printErrorMessage("Please enter a valid number");
                         break;
                 }
             } else {
-                out.println("Please enter a valid number");
+                printErrorMessage("Please enter a valid number");
                 scanner.next();
             }
         }
@@ -105,11 +112,11 @@ public class ClientUI {
                 out.println("\nSuccessfully logged in as " + registerResult.username());
                 postLoginDisplay();
             } catch (Exception e) {
-                out.println(e.getMessage());
+                printErrorMessage(e.getMessage());
                 preLoginDisplay();
             }
         } else {
-            out.println("Login failed");
+            printErrorMessage("Login failed");
             preLoginDisplay();
         }
     }
@@ -136,16 +143,16 @@ public class ClientUI {
                 out.println("\nSuccessfully logged in as " + loginResult.username());
                 postLoginDisplay();
             } catch (Exception e) {
-                out.println(e.getMessage());
+                printErrorMessage(e.getMessage());
                 preLoginDisplay();
             }
         } else {
-            out.println("\nLogin failed");
+            printErrorMessage("Login failed");
         }
     }
 
     private static void preLoginHelp() {
-        out.println("\n0. Help");
+        out.println("0. Help");
         out.println("1. Register");
         out.println("2. Login");
         out.println("3. Quit");
@@ -162,7 +169,7 @@ public class ClientUI {
         postLoginHelp();
 
         while (isLoggedIn) {
-            out.print("\n[");
+            out.print("[");
             out.print(SET_TEXT_COLOR_GREEN);
             out.print("LOGGED IN");
             out.print(RESET_TEXT_COLOR);
@@ -193,11 +200,11 @@ public class ClientUI {
                         observeGame();
                         break;
                     default:
-                        out.println("Please enter a valid number");
+                        printErrorMessage("Please enter a valid number");
                         break;
                 }
             } else {
-                out.println("Please enter a valid number");
+                printErrorMessage("Please enter a valid number");
                 scanner.next();
             }
         }
@@ -211,7 +218,7 @@ public class ClientUI {
             authToken = null;
             out.println("\nSuccessfully logged out");
         } catch (Exception e) {
-            out.println(e.getMessage());
+            printErrorMessage(e.getMessage());
         }
     }
 
@@ -230,10 +237,10 @@ public class ClientUI {
                 int gameID = createGameResult.gameID();
                 out.println("\nSuccessfully created game:\n* Name: '" + gameName + "'\n* ID: " + gameID);
             } catch (Exception e) {
-                out.println(e.getMessage());
+                printErrorMessage(e.getMessage());
             }
         } else {
-            out.println("\nGame Creation failed");
+            printErrorMessage("Game creation failed");
         }
     }
 
@@ -242,7 +249,7 @@ public class ClientUI {
             ListGamesResult listGameResult = serverFacade.listGames(authToken);
             Collection<GameData> games = listGameResult.games();
             if (games.isEmpty()) {
-                out.println("No games available");
+                printErrorMessage("No available games");
                 return;
             }
 
@@ -262,14 +269,14 @@ public class ClientUI {
                 }
             }
         } catch (Exception e) {
-            out.println(e.getMessage());
+            printErrorMessage(e.getMessage());
         }
     }
 
     private static void playGame() {
         Scanner scanner = new Scanner(in);
         int gameID = 0;
-        String color = null;
+        ChessGame.TeamColor color = null;
 
         out.print("Game ID >>> ");
         if (scanner.hasNextInt()) {
@@ -280,17 +287,24 @@ public class ClientUI {
         if (scanner.hasNext()) {
             String colorInput = scanner.next().toUpperCase();
 
-            if (Objects.equals(colorInput, "BLACK") || Objects.equals(colorInput, "WHITE")) {
-                color = colorInput;
+            if (Objects.equals(colorInput.toUpperCase(), "BLACK")) {
+                color = ChessGame.TeamColor.BLACK;
+            } else if (Objects.equals(colorInput.toUpperCase(), "WHITE")) {
+                color = ChessGame.TeamColor.WHITE;
             }
         }
 
         if (gameID >= 1 && color != null) {
-            out.println();
-            GameBoardUI.main(null);
-            out.println();
+            try {
+                serverFacade.playGame(authToken, color, gameID);
+                out.println();
+                GameBoardUI.main(null);
+                out.println();
+            } catch (Exception e) {
+                printErrorMessage(e.getMessage());
+            }
         } else {
-            out.println("\nGame join failed");
+            printErrorMessage("Game join failed");
         }
     }
 
@@ -308,7 +322,7 @@ public class ClientUI {
             GameBoardUI.main(null);
             out.println();
         } else {
-            out.println("\nGame observation failed");
+            printErrorMessage("Game observation failed");
         }
     }
 

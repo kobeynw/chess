@@ -1,5 +1,6 @@
 package network;
 
+import chess.ChessGame;
 import request.*;
 import result.*;
 
@@ -42,11 +43,10 @@ public class ServerFacade {
         return comm.doGet(urlString, listGamesRequest);
     }
 
-//    public JoinGameResult playGame(String authToken, ChessGame.TeamColor teamColor, int gameID) {
-//        JoinGameRequest joinGameRequest = new JoinGameRequest(authToken, teamColor, gameID);
-//    }
-//
-//    public JoinGameResult observeGame(String authToken, int gameID) {
-//        JoinGameRequest joinGameRequest = new JoinGameRequest(authToken, ChessGame.TeamColor.WHITE, gameID);
-//    }
+    public void playGame(String authToken, ChessGame.TeamColor teamColor, int gameID) throws Exception {
+        JoinGameRequest joinGameRequest = new JoinGameRequest(authToken, teamColor, gameID);
+        String urlString = urlBase + "/game";
+
+        comm.doPut(urlString, joinGameRequest);
+    }
 }

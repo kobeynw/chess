@@ -18,6 +18,49 @@ import java.util.Collection;
 import java.util.Objects;
 
 public class ServerCommunicator {
+    private HttpURLConnection configureConnection(String urlString, String method, String auth) throws IOException {
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        connection.setReadTimeout(5000);
+        connection.setRequestMethod(method);
+        connection.addRequestProperty("Content-Type", "application/json");
+
+        if (!Objects.equals(method, "GET")) {
+            connection.setDoOutput(true);
+        }
+        if (auth != null) {
+            connection.addRequestProperty("authorization", auth);
+        }
+
+        connection.connect();
+
+        return connection;
+    }
+
+    private void handleErrorMsg(HttpURLConnection connection) throws Exception {
+        try (InputStream errorBody = connection.getErrorStream()) {
+            InputStreamReader inputStreamReader = new InputStreamReader(errorBody);
+            JsonObject jsonError = new Gson().fromJson(inputStreamReader, JsonObject.class);
+
+            String errorMsg = jsonError.get("message").getAsString();
+            throw new Exception(errorMsg);
+        }
+    }
+
+    public void doPut(String urlString, JoinGameRequest joinGameRequest) throws Exception {
+        HttpURLConnection connection = configureConnection(urlString, "PUT", joinGameRequest.authToken());
+
+        try(OutputStream requestBody = connection.getOutputStream()) {
+            var jsonBody = new Gson().toJson(joinGameRequest);
+            requestBody.write(jsonBody.getBytes());
+        }
+
+        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            handleErrorMsg(connection);
+        }
+    }
+
     public ListGamesResult doGet(String urlString, ListGamesRequest listGamesRequest) throws Exception {
         HttpURLConnection connection = configureConnection(urlString, "GET", listGamesRequest.authToken());
 
@@ -49,34 +92,9 @@ public class ServerCommunicator {
                 return new ListGamesResult(games);
             }
         } else {
-            try (InputStream errorBody = connection.getErrorStream()) {
-                InputStreamReader inputStreamReader = new InputStreamReader(errorBody);
-                JsonObject jsonError = new Gson().fromJson(inputStreamReader, JsonObject.class);
-
-                String errorMsg = jsonError.get("message").getAsString();
-                throw new Exception(errorMsg);
-            }
+            handleErrorMsg(connection);
+            return null;
         }
-    }
-
-    private HttpURLConnection configureConnection(String urlString, String method, String auth) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        connection.setReadTimeout(5000);
-        connection.setRequestMethod(method);
-        connection.addRequestProperty("Content-Type", "application/json");
-
-        if (Objects.equals(method, "POST") || Objects.equals(method, "DELETE")) {
-            connection.setDoOutput(true);
-        }
-        if (auth != null) {
-            connection.addRequestProperty("authorization", auth);
-        }
-
-        connection.connect();
-
-        return connection;
     }
 
     public void doDelete(String urlString, LogoutRequest logoutRequest) throws Exception {
@@ -88,13 +106,7 @@ public class ServerCommunicator {
         }
 
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-            try (InputStream errorBody = connection.getErrorStream()) {
-                InputStreamReader inputStreamReader = new InputStreamReader(errorBody);
-                JsonObject jsonError = new Gson().fromJson(inputStreamReader, JsonObject.class);
-
-                String errorMsg = jsonError.get("message").getAsString();
-                throw new Exception(errorMsg);
-            }
+            handleErrorMsg(connection);
         }
     }
 
@@ -134,13 +146,8 @@ public class ServerCommunicator {
                 }
             }
         } else {
-            try (InputStream errorBody = connection.getErrorStream()) {
-                InputStreamReader inputStreamReader = new InputStreamReader(errorBody);
-                JsonObject jsonError = new Gson().fromJson(inputStreamReader, JsonObject.class);
-
-                String errorMsg = jsonError.get("message").getAsString();
-                throw new Exception(errorMsg);
-            }
+            handleErrorMsg(connection);
+            return null;
         }
     }
 }
