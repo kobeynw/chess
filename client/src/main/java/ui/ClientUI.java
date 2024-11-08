@@ -15,7 +15,7 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class ClientUI {
-    private static final ServerFacade serverFacade = new ServerFacade(8080);
+    private static final ServerFacade SERVER_FACADE = new ServerFacade(8080);
     private static String authToken = null;
 
     public static void main(String[] args) {
@@ -107,7 +107,7 @@ public class ClientUI {
 
         if (username != null && password != null && email != null) {
             try {
-                RegisterResult registerResult = serverFacade.register(username, password, email);
+                RegisterResult registerResult = SERVER_FACADE.register(username, password, email);
                 authToken = registerResult.authToken();
                 out.println("\nSuccessfully logged in as " + registerResult.username());
                 postLoginDisplay();
@@ -138,7 +138,7 @@ public class ClientUI {
 
         if (username != null && password != null) {
             try {
-                LoginResult loginResult = serverFacade.login(username, password);
+                LoginResult loginResult = SERVER_FACADE.login(username, password);
                 authToken = loginResult.authToken();
                 out.println("\nSuccessfully logged in as " + loginResult.username());
                 postLoginDisplay();
@@ -214,7 +214,7 @@ public class ClientUI {
 
     private static void logoutUser() {
         try {
-            serverFacade.logout(authToken);
+            SERVER_FACADE.logout(authToken);
             authToken = null;
             out.println("\nSuccessfully logged out");
         } catch (Exception e) {
@@ -233,7 +233,7 @@ public class ClientUI {
 
         if (gameName != null) {
             try {
-                CreateGameResult createGameResult = serverFacade.createGame(authToken, gameName);
+                CreateGameResult createGameResult = SERVER_FACADE.createGame(authToken, gameName);
                 int gameID = createGameResult.gameID();
                 out.println("\nSuccessfully created game:\n* Name: '" + gameName + "'\n* ID: " + gameID);
             } catch (Exception e) {
@@ -246,7 +246,7 @@ public class ClientUI {
 
     private static void listGames() {
         try {
-            ListGamesResult listGamesResult = serverFacade.listGames(authToken);
+            ListGamesResult listGamesResult = SERVER_FACADE.listGames(authToken);
             Collection<GameData> games = listGamesResult.games();
             if (games.isEmpty()) {
                 printErrorMessage("No available games");
@@ -296,7 +296,7 @@ public class ClientUI {
 
         if (gameID >= 1 && color != null) {
             try {
-                serverFacade.playGame(authToken, color, gameID);
+                SERVER_FACADE.playGame(authToken, color, gameID);
                 out.println();
                 GameBoardUI.main(null);
                 out.println();

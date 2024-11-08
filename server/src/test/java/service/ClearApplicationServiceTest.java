@@ -13,28 +13,28 @@ public class ClearApplicationServiceTest {
     private final UserService userService = new UserService(userDAO, authDAO);
     private final GameService gameService = new GameService(gameDAO, authDAO);
     private final ClearApplicationService clearService = new ClearApplicationService(userDAO, authDAO, gameDAO);
+    private final String username = "username";
+    private final String password = "password";
 
-    private String registerAndLogin() throws BadRequestException, DataAccessException, UnauthorizedException,
+    private String getAuth() throws BadRequestException, DataAccessException, UnauthorizedException,
             InfoTakenException {
-        RegisterRequest registerRequest = new RegisterRequest("username", "password",
+        RegisterRequest registerRequest = new RegisterRequest(username, password,
                 "email@example.com");
-        RegisterResult registerResult = userService.registerService(registerRequest);
-        LoginResult loginResult = userService.loginService(new LoginRequest("username", "password"));
-
-        return loginResult.authToken();
+        RegisterResult r = userService.registerService(registerRequest);
+        return userService.loginService(new LoginRequest(username, password)).authToken();
     }
 
     @Test
     public void testClearApplication() throws BadRequestException, DataAccessException, UnauthorizedException,
             InfoTakenException {
-        String authTokenOutput = registerAndLogin();
+        String authTokenOutput = getAuth();
 
         CreateGameRequest createGameRequest = new CreateGameRequest(authTokenOutput, "My Game");
         CreateGameResult createGameResult = gameService.createGameService(createGameRequest);
 
         ClearApplicationResult clearResult = clearService.clearApplication();
 
-        Assertions.assertNull(userDAO.getUser("username", "password"));
+        Assertions.assertNull(userDAO.getUser(username, password));
         Assertions.assertTrue(gameDAO.getGamesList().isEmpty());
         Assertions.assertNull(authDAO.getAuth(authTokenOutput));
     }
@@ -42,11 +42,11 @@ public class ClearApplicationServiceTest {
     @Test
     public void testClearApplicationWithNoDataToClear() throws BadRequestException, DataAccessException, UnauthorizedException,
             InfoTakenException {
-        String authTokenOutput = registerAndLogin();
+        String authTokenOutput = getAuth();
 
         ClearApplicationResult clearResult = clearService.clearApplication();
 
-        Assertions.assertNull(userDAO.getUser("username", "password"));
+        Assertions.assertNull(userDAO.getUser(username, password));
         Assertions.assertTrue(gameDAO.getGamesList().isEmpty());
         Assertions.assertNull(authDAO.getAuth(authTokenOutput));
     }

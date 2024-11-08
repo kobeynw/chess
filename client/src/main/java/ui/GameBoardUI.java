@@ -12,17 +12,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GameBoardUI {
-    private static TeamColor teamColor = TeamColor.BLACK;
-    private static final String darkColor = SET_BG_COLOR_BLUE;
-    private static final String lightColor = SET_BG_COLOR_WHITE;
-    private static final String borderColor = SET_BG_COLOR_LIGHT_GREY;
-    private static final String textColor = SET_TEXT_COLOR_WHITE;
-    private static final String pieceColor = SET_TEXT_COLOR_BLACK;
+    private static TeamColor TEAM_COLOR = TeamColor.BLACK;
+    private static final String DARK_COLOR = SET_BG_COLOR_BLUE;
+    private static final String LIGHT_COLOR = SET_BG_COLOR_WHITE;
+    private static final String BORDER_COLOR = SET_BG_COLOR_LIGHT_GREY;
+    private static final String TEXT_COLOR = SET_TEXT_COLOR_WHITE;
+    private static final String PIECE_COLOR = SET_TEXT_COLOR_BLACK;
 
     private static final String[] HEADER_ROW = {EMPTY, " A ", " B ", " C ", " D ", " E ", " F ", " G ", " H ", EMPTY};
-    private static final ChessBoard chessBoard = new ChessBoard();
-    private static final Map<ChessPiece.PieceType, String> blackTypeMap = getTypeMap(TeamColor.BLACK);
-    private static final Map<ChessPiece.PieceType, String> whiteTypeMap = getTypeMap(TeamColor.WHITE);
+    private static final ChessBoard CHESS_BOARD = new ChessBoard();
+    private static final Map<ChessPiece.PieceType, String> BLACK_TYPE_MAP = getTypeMap(TeamColor.BLACK);
+    private static final Map<ChessPiece.PieceType, String> WHITE_TYPE_MAP = getTypeMap(TeamColor.WHITE);
 
     private static Map<ChessPiece.PieceType, String> getTypeMap(TeamColor teamColor) {
         Map<ChessPiece.PieceType, String> typeMap = new HashMap<>();
@@ -49,7 +49,7 @@ public class GameBoardUI {
     public static void main(String[] args) {
         drawGame();
         out.println();
-        teamColor = TeamColor.WHITE;
+        TEAM_COLOR = TeamColor.WHITE;
         drawGame();
 
         out.print(RESET_BG_COLOR);
@@ -57,7 +57,7 @@ public class GameBoardUI {
     }
 
     private static void drawGame() {
-        chessBoard.resetBoard();
+        CHESS_BOARD.resetBoard();
 
         drawHeader();
         drawBoard();
@@ -65,10 +65,10 @@ public class GameBoardUI {
     }
 
     private static void drawHeader() {
-        out.print(textColor);
-        out.print(borderColor);
+        out.print(TEXT_COLOR);
+        out.print(BORDER_COLOR);
 
-        if (teamColor == TeamColor.WHITE) {
+        if (TEAM_COLOR == TeamColor.WHITE) {
             for (String row : HEADER_ROW) {
                 out.print(row);
             }
@@ -86,7 +86,7 @@ public class GameBoardUI {
         int currentRow = 1;
         int currentCol = 1;
 
-        if (teamColor == TeamColor.BLACK) {
+        if (TEAM_COLOR == TeamColor.BLACK) {
             for (int i = 1; i <= 8; i++) {
                 drawRow(i, currentRow, currentCol);
                 out.print(RESET_BG_COLOR);
@@ -106,44 +106,44 @@ public class GameBoardUI {
     }
 
     private static void drawRow(int rowNum, int currentRow, int currentCol) {
-        out.print(borderColor);
+        out.print(BORDER_COLOR);
         out.print(" " + rowNum + " ");
 
         if (currentRow % 2 == 1) {
             for (int i = 0; i < 4; i++) {
-                out.print(lightColor);
+                out.print(LIGHT_COLOR);
                 drawSquare(currentRow, currentCol);
                 currentCol++;
 
-                out.print(darkColor);
+                out.print(DARK_COLOR);
                 drawSquare(currentRow, currentCol);
                 currentCol++;
             }
         } else {
             for (int i = 0; i < 4; i++) {
-                out.print(darkColor);
+                out.print(DARK_COLOR);
                 drawSquare(currentRow, currentCol);
                 currentCol++;
 
-                out.print(lightColor);
+                out.print(LIGHT_COLOR);
                 drawSquare(currentRow, currentCol);
                 currentCol++;
             }
         }
 
-        out.print(borderColor);
+        out.print(BORDER_COLOR);
         out.print(" " + rowNum + " ");
     }
 
     private static void drawSquare(int currentRow, int currentCol) {
-        if (teamColor == TeamColor.WHITE) {
+        if (TEAM_COLOR == TeamColor.WHITE) {
             currentRow = 9 - currentRow;
         } else {
             currentCol = 9 - currentCol;
         }
 
         ChessPosition position = new ChessPosition(currentRow, currentCol);
-        ChessPiece piece = chessBoard.getPiece(position);
+        ChessPiece piece = CHESS_BOARD.getPiece(position);
 
         if (piece == null) {
             out.print(EMPTY);
@@ -154,13 +154,13 @@ public class GameBoardUI {
         ChessPiece.PieceType type = piece.getPieceType();
 
         if (color == TeamColor.WHITE) {
-            out.print(pieceColor);
-            out.print(whiteTypeMap.get(type));
-            out.print(textColor);
+            out.print(PIECE_COLOR);
+            out.print(WHITE_TYPE_MAP.get(type));
+            out.print(TEXT_COLOR);
         } else {
-            out.print(pieceColor);
-            out.print(blackTypeMap.get(type));
-            out.print(textColor);
+            out.print(PIECE_COLOR);
+            out.print(BLACK_TYPE_MAP.get(type));
+            out.print(TEXT_COLOR);
         }
     }
 }
