@@ -1,7 +1,7 @@
 package ui;
 
 import network.ServerFacade;
-import result.RegisterResult;
+import result.*;
 
 import static java.lang.System.out;
 import static java.lang.System.in;
@@ -128,9 +128,15 @@ public class ClientUI {
         }
 
         if (username != null && password != null) {
-            out.println("\nSuccessfully logged in as " + username);
-
-            postLoginDisplay();
+            try {
+                LoginResult loginResult = serverFacade.login(username, password);
+                authToken = loginResult.authToken();
+                out.println("\nSuccessfully logged in as " + loginResult.username());
+                postLoginDisplay();
+            } catch (Exception e) {
+                out.println(e.getMessage());
+                preLoginDisplay();
+            }
         } else {
             out.println("\nLogin failed");
         }
@@ -198,7 +204,12 @@ public class ClientUI {
     }
 
     private static void logoutUser() {
-        out.println("\nSuccessfully logged out");
+        try {
+            serverFacade.logout(authToken);
+            out.println("\nSuccessfully logged out");
+        } catch (Exception e) {
+            out.println(e.getMessage());
+        }
     }
 
     private static void createGame() {
