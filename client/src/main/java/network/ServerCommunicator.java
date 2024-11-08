@@ -1,7 +1,9 @@
 package network;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import model.GameData;
 import result.*;
 import request.*;
 
@@ -11,40 +13,51 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
 
 public class ServerCommunicator {
-//    public void doGet(String urlString) throws IOException {
-//        URL url = new URL(urlString);
-//
-//        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//
-//        connection.setReadTimeout(5000);
-//        connection.setRequestMethod("GET");
-//
-//        // Set HTTP request headers, if necessary
-//        // connection.addRequestProperty("Accept", "text/html");
-//        // connection.addRequestProperty("Authorization", "fjaklc8sdfjklakl");
-//
-//        connection.connect();
-//
-//        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-//            // Get HTTP response headers, if necessary
-//            // Map<String, List<String>> headers = connection.getHeaderFields();
-//
-//            // OR
-//
-//            //connection.getHeaderField("Content-Length");
-//
-//            InputStream responseBody = connection.getInputStream();
-//            // Read and process response body from InputStream ...
-//        } else {
-//            // SERVER RETURNED AN HTTP ERROR
-//
-//            InputStream responseBody = connection.getErrorStream();
-//            // Read and process error response body from InputStream ...
-//        }
-//    }
+    public ListGamesResult doGet(String urlString, ListGamesRequest listGamesRequest) throws Exception {
+        HttpURLConnection connection = configureConnection(urlString, "GET", listGamesRequest.authToken());
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            try (InputStream responseBody = connection.getInputStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                JsonObject jsonResponse = new Gson().fromJson(inputStreamReader, JsonObject.class);
+
+                JsonArray jsonArray = jsonResponse.get("games").getAsJsonArray();
+                Collection<GameData> games = new ArrayList<>();
+
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    JsonObject gameObj = jsonArray.get(i).getAsJsonObject();
+                    int gameID = gameObj.get("gameID").getAsInt();
+                    String gameName = gameObj.get("gameName").getAsString();
+                    String white = null;
+                    String black = null;
+
+                    if (gameObj.get("whiteUsername") != null) {
+                        white = gameObj.get("whiteUsername").getAsString();
+                    }
+                    if (gameObj.get("blackUsername") != null) {
+                        black = gameObj.get("blackUsername").getAsString();
+                    }
+
+                    games.add(new GameData(gameID, white, black, gameName, null));
+                }
+
+                return new ListGamesResult(games);
+            }
+        } else {
+            try (InputStream errorBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(errorBody);
+                JsonObject jsonError = new Gson().fromJson(inputStreamReader, JsonObject.class);
+
+                String errorMsg = jsonError.get("message").getAsString();
+                throw new Exception(errorMsg);
+            }
+        }
+    }
 
     private HttpURLConnection configureConnection(String urlString, String method, String auth) throws IOException {
         URL url = new URL(urlString);

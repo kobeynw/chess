@@ -35,10 +35,13 @@ public class ServerFacade {
         return (CreateGameResult) comm.doPost(urlString, createGameRequest);
     }
 
-//    public ListGamesResult listGames(String authToken) {
-//        ListGamesRequest listGamesRequest = new ListGamesRequest(authToken);
-//    }
-//
+    public ListGamesResult listGames(String authToken) throws Exception {
+        ListGamesRequest listGamesRequest = new ListGamesRequest(authToken);
+        String urlString = urlBase + "/game";
+
+        return comm.doGet(urlString, listGamesRequest);
+    }
+
 //    public JoinGameResult playGame(String authToken, ChessGame.TeamColor teamColor, int gameID) {
 //        JoinGameRequest joinGameRequest = new JoinGameRequest(authToken, teamColor, gameID);
 //    }

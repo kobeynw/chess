@@ -1,11 +1,13 @@
 package ui;
 
+import model.GameData;
 import network.ServerFacade;
 import result.*;
 
 import static java.lang.System.out;
 import static java.lang.System.in;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -206,6 +208,7 @@ public class ClientUI {
     private static void logoutUser() {
         try {
             serverFacade.logout(authToken);
+            authToken = null;
             out.println("\nSuccessfully logged out");
         } catch (Exception e) {
             out.println(e.getMessage());
@@ -235,7 +238,32 @@ public class ClientUI {
     }
 
     private static void listGames() {
-        out.println("\nGames: None");
+        try {
+            ListGamesResult listGameResult = serverFacade.listGames(authToken);
+            Collection<GameData> games = listGameResult.games();
+            if (games.isEmpty()) {
+                out.println("No games available");
+                return;
+            }
+
+            out.println("\nAvailable Games (numbered by ID):");
+            for (GameData game : games) {
+                out.println(game.gameID() + ". " + "'" + game.gameName() + "'");
+
+                if (game.whiteUsername() == null) {
+                    out.println("   * White: [available]");
+                } else {
+                    out.println("   * White: " + game.whiteUsername());
+                }
+                if (game.blackUsername() == null) {
+                    out.println("   * Black: [available]");
+                } else {
+                    out.println("   * Black: " + game.blackUsername());
+                }
+            }
+        } catch (Exception e) {
+            out.println(e.getMessage());
+        }
     }
 
     private static void playGame() {
