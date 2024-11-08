@@ -218,11 +218,17 @@ public class ClientUI {
 
         out.print("Game Name >>> ");
         if (scanner.hasNext()) {
-            gameName = scanner.next();
+            gameName = scanner.nextLine();
         }
 
         if (gameName != null) {
-            out.println("\nSuccessfully created game: '" + gameName + "'");
+            try {
+                CreateGameResult createGameResult = serverFacade.createGame(authToken, gameName);
+                int gameID = createGameResult.gameID();
+                out.println("\nSuccessfully created game:\n* Name: '" + gameName + "'\n* ID: " + gameID);
+            } catch (Exception e) {
+                out.println(e.getMessage());
+            }
         } else {
             out.println("\nGame Creation failed");
         }

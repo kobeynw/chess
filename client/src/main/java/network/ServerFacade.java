@@ -27,11 +27,14 @@ public class ServerFacade {
 
         comm.doDelete(urlString, logoutRequest);
     }
-//
-//    public CreateGameResult createGame(String authToken, String gameName) {
-//        CreateGameRequest createGameRequest = new CreateGameRequest(authToken, gameName);
-//    }
-//
+
+    public CreateGameResult createGame(String authToken, String gameName) throws Exception {
+        CreateGameRequest createGameRequest = new CreateGameRequest(authToken, gameName);
+        String urlString = urlBase + "/game";
+
+        return (CreateGameResult) comm.doPost(urlString, createGameRequest);
+    }
+
 //    public ListGamesResult listGames(String authToken) {
 //        ListGamesRequest listGamesRequest = new ListGamesRequest(authToken);
 //    }

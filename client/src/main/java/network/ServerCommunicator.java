@@ -86,7 +86,13 @@ public class ServerCommunicator {
     }
 
     public Object doPost(String urlString, Object request) throws Exception {
-        HttpURLConnection connection = configureConnection(urlString, "POST", null);
+        HttpURLConnection connection = null;
+        if (request.getClass() == CreateGameRequest.class) {
+            String authToken = ((CreateGameRequest) request).authToken();
+            connection = configureConnection(urlString, "POST", authToken);
+        } else {
+            connection = configureConnection(urlString, "POST", null);
+        }
 
         try(OutputStream requestBody = connection.getOutputStream()) {
             var jsonBody = new Gson().toJson(request);
@@ -94,13 +100,14 @@ public class ServerCommunicator {
         }
 
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-            if (request.getClass() == CreateGameRequest.class) {
-                return null;
-            }
-
             try (InputStream responseBody = connection.getInputStream()) {
                 InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
                 JsonObject jsonResponse = new Gson().fromJson(inputStreamReader, JsonObject.class);
+
+                if (request.getClass() == CreateGameRequest.class) {
+                    int gameID = jsonResponse.get("gameID").getAsInt();
+                    return new CreateGameResult(gameID);
+                }
 
                 String username = jsonResponse.get("username").getAsString();
                 String authToken = jsonResponse.get("authToken").getAsString();
