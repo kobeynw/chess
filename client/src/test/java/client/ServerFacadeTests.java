@@ -20,8 +20,14 @@ public class ServerFacadeTests {
     public static void init() {
         server = new Server();
         var port = server.run(0);
-        serverFacade = new ServerFacade(port);
         System.out.println("Started test HTTP server on " + port);
+
+        serverFacade = new ServerFacade(port);
+        try {
+            serverFacade.clearDatabase();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @AfterAll

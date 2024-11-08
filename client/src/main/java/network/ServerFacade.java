@@ -53,4 +53,9 @@ public class ServerFacade {
 
         comm.doPut(urlString, joinGameRequest);
     }
+
+    public void clearDatabase() throws Exception {
+        String urlString = urlBase + "/db";
+        comm.doDelete(urlString, null);
+    }
 }

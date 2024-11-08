@@ -98,11 +98,15 @@ public class ServerCommunicator {
     }
 
     public void doDelete(String urlString, LogoutRequest logoutRequest) throws Exception {
-        HttpURLConnection connection = configureConnection(urlString, "DELETE", logoutRequest.authToken());
-
-        try(OutputStream requestBody = connection.getOutputStream()) {
-            var jsonBody = new Gson().toJson(logoutRequest);
-            requestBody.write(jsonBody.getBytes());
+        HttpURLConnection connection;
+        if (logoutRequest == null) {
+            connection = configureConnection(urlString, "DELETE", null);
+        } else {
+            connection = configureConnection(urlString, "DELETE", logoutRequest.authToken());
+            try(OutputStream requestBody = connection.getOutputStream()) {
+                var jsonBody = new Gson().toJson(logoutRequest);
+                requestBody.write(jsonBody.getBytes());
+            }
         }
 
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -111,7 +115,7 @@ public class ServerCommunicator {
     }
 
     public Object doPost(String urlString, Object request) throws Exception {
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         if (request.getClass() == CreateGameRequest.class) {
             String authToken = ((CreateGameRequest) request).authToken();
             connection = configureConnection(urlString, "POST", authToken);
