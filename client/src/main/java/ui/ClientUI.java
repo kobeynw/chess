@@ -15,7 +15,7 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class ClientUI {
-    private static final ServerFacade serverFacade = new ServerFacade();
+    private static final ServerFacade serverFacade = new ServerFacade(8080);
     private static String authToken = null;
 
     public static void main(String[] args) {
