@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GameBoardUI {
-    private static TeamColor TEAM_COLOR = TeamColor.BLACK;
+    private static TeamColor teamColor = TeamColor.BLACK;
     private static final String DARK_COLOR = SET_BG_COLOR_BLUE;
     private static final String LIGHT_COLOR = SET_BG_COLOR_WHITE;
     private static final String BORDER_COLOR = SET_BG_COLOR_LIGHT_GREY;
@@ -49,7 +49,7 @@ public class GameBoardUI {
     public static void main(String[] args) {
         drawGame();
         out.println();
-        TEAM_COLOR = TeamColor.WHITE;
+        teamColor = TeamColor.WHITE;
         drawGame();
 
         out.print(RESET_BG_COLOR);
@@ -68,7 +68,7 @@ public class GameBoardUI {
         out.print(TEXT_COLOR);
         out.print(BORDER_COLOR);
 
-        if (TEAM_COLOR == TeamColor.WHITE) {
+        if (teamColor == TeamColor.WHITE) {
             for (String row : HEADER_ROW) {
                 out.print(row);
             }
@@ -86,7 +86,7 @@ public class GameBoardUI {
         int currentRow = 1;
         int currentCol = 1;
 
-        if (TEAM_COLOR == TeamColor.BLACK) {
+        if (teamColor == TeamColor.BLACK) {
             for (int i = 1; i <= 8; i++) {
                 drawRow(i, currentRow, currentCol);
                 out.print(RESET_BG_COLOR);
@@ -136,7 +136,7 @@ public class GameBoardUI {
     }
 
     private static void drawSquare(int currentRow, int currentCol) {
-        if (TEAM_COLOR == TeamColor.WHITE) {
+        if (teamColor == TeamColor.WHITE) {
             currentRow = 9 - currentRow;
         } else {
             currentCol = 9 - currentCol;
