@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class ServerCommunicator {
+public class HttpCommunicator {
     private HttpURLConnection configureConnection(String urlString, String method, String auth) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();

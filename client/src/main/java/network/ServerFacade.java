@@ -5,7 +5,7 @@ import result.*;
 import request.*;
 
 public class ServerFacade {
-    private final ServerCommunicator comm = new ServerCommunicator();
+    private final HttpCommunicator comm = new HttpCommunicator();
     private final String urlBase;
 
     public ServerFacade(int port) {
