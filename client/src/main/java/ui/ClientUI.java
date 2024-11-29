@@ -169,6 +169,7 @@ public class ClientUI {
         postLoginHelp();
 
         while (isLoggedIn) {
+            out.println("(POST LOGIN)");
             out.print("[");
             out.print(SET_TEXT_COLOR_GREEN);
             out.print("LOGGED IN");
@@ -195,9 +196,11 @@ public class ClientUI {
                         break;
                     case 4:
                         playGame();
+                        postLoginHelp();
                         break;
                     case 5:
                         observeGame();
+                        postLoginHelp();
                         break;
                     default:
                         printErrorMessage("Please enter a valid number");
@@ -297,9 +300,7 @@ public class ClientUI {
         if (gameID >= 1 && color != null) {
             try {
                 SERVER_FACADE.playGame(authToken, color, gameID);
-                out.println();
-                GameBoardUI.main(null);
-                out.println();
+                gameplayDisplay();
             } catch (Exception e) {
                 printErrorMessage(e.getMessage());
             }
@@ -318,9 +319,8 @@ public class ClientUI {
         }
 
         if (gameID >= 1) {
-            out.println();
-            GameBoardUI.main(null);
-            out.println();
+            // TODO: server facade observe game via websocket
+            gameplayDisplay();
         } else {
             printErrorMessage("Game observation failed");
         }
@@ -333,5 +333,83 @@ public class ClientUI {
         out.println("3. List Games");
         out.println("4. Play Game");
         out.println("5. Observe Game");
+    }
+
+    private static void gameplayDisplay() {
+        boolean isPlaying = true;
+        Scanner scanner = new Scanner(in);
+
+        gameplayHelp();
+
+        while (isPlaying) {
+            out.println("(GAMEPLAY)");
+            out.print("[");
+            out.print(SET_TEXT_COLOR_GREEN);
+            out.print("LOGGED IN");
+            out.print(RESET_TEXT_COLOR);
+            out.print("] >>> ");
+
+            if (scanner.hasNextInt()) {
+                int input = scanner.nextInt();
+
+                switch (input) {
+                    case 0:
+                        out.println("\nType the number of the option that you would like to select.");
+                        gameplayHelp();
+                        break;
+                    case 1:
+                        leaveGame();
+                        isPlaying = false;
+                        break;
+                    case 2:
+                        redrawBoard();
+                        break;
+                    case 3:
+                        makeMove();
+                        break;
+                    case 4:
+                        highlightMoves();
+                        break;
+                    case 5:
+                        resign();
+                        break;
+                    default:
+                        printErrorMessage("Please enter a valid number");
+                        break;
+                }
+            } else {
+                printErrorMessage("Please enter a valid number");
+                scanner.next();
+            }
+        }
+    }
+
+    private static void leaveGame() {
+        // TODO: leave game functionality
+    }
+
+    private static void redrawBoard() {
+        // TODO: redraw board functionality
+    }
+
+    private static void makeMove() {
+        // TODO: make move functionality
+    }
+
+    private static void highlightMoves() {
+        // TODO: highlight legal moves functionality
+    }
+
+    private static void resign() {
+        // TODO: resign functionality
+    }
+
+    private static void gameplayHelp() {
+        out.println("\n0. Help");
+        out.println("1. Leave Game");
+        out.println("2. Redraw Game Board");
+        out.println("3. Make Move");
+        out.println("4. Highlight Legal Moves");
+        out.println("5. Resign");
     }
 }
