@@ -1,6 +1,8 @@
 package ui;
 
+import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessPosition;
 import model.GameData;
 import network.ServerFacade;
 import result.*;
@@ -300,7 +302,7 @@ public class ClientUI {
         if (gameID >= 1 && color != null) {
             try {
                 SERVER_FACADE.playGame(authToken, color, gameID);
-                gameplayDisplay();
+                gameplayDisplay(color, false);
             } catch (Exception e) {
                 printErrorMessage(e.getMessage());
             }
@@ -320,7 +322,7 @@ public class ClientUI {
 
         if (gameID >= 1) {
             // TODO: server facade observe game via websocket
-            gameplayDisplay();
+            gameplayDisplay(ChessGame.TeamColor.WHITE, true);
         } else {
             printErrorMessage("Game observation failed");
         }
@@ -335,7 +337,7 @@ public class ClientUI {
         out.println("5. Observe Game");
     }
 
-    private static void gameplayDisplay() {
+    private static void gameplayDisplay(ChessGame.TeamColor teamColor, boolean isObserving) {
         boolean isPlaying = true;
         Scanner scanner = new Scanner(in);
 
@@ -358,20 +360,30 @@ public class ClientUI {
                         gameplayHelp();
                         break;
                     case 1:
-                        leaveGame();
+                        if (!isObserving) {
+                            leaveGame(teamColor);
+                        }
                         isPlaying = false;
                         break;
                     case 2:
-                        redrawBoard();
+                        redrawBoard(teamColor);
                         break;
                     case 3:
-                        makeMove();
+                        if (!isObserving) {
+                            makeMove(teamColor);
+                        } else {
+                            printErrorMessage("Cannot make moves while observing");
+                        }
                         break;
                     case 4:
-                        highlightMoves();
+                        highlightMoves(teamColor);
                         break;
                     case 5:
-                        resign();
+                        if (!isObserving) {
+                            resign(teamColor);
+                        } else {
+                            printErrorMessage("Cannot resign while observing");
+                        }
                         break;
                     default:
                         printErrorMessage("Please enter a valid number");
@@ -384,23 +396,63 @@ public class ClientUI {
         }
     }
 
-    private static void leaveGame() {
+    private static void leaveGame(ChessGame.TeamColor teamColor) {
         // TODO: leave game functionality
     }
 
-    private static void redrawBoard() {
-        // TODO: redraw board functionality
+    private static void redrawBoard(ChessGame.TeamColor teamColor) {
+        // TODO: update chessBoard based on current board
+        ChessBoard chessBoard = new ChessBoard();
+        GameBoardUI boardUI = new GameBoardUI(teamColor, null, chessBoard);
+
+        boardUI.drawGame();
     }
 
-    private static void makeMove() {
+    private static void makeMove(ChessGame.TeamColor teamColor) {
         // TODO: make move functionality
     }
 
-    private static void highlightMoves() {
-        // TODO: highlight legal moves functionality
+    private static void highlightMoves(ChessGame.TeamColor teamColor) {
+        // TODO: update chessBoard based on current board
+
+        Scanner scanner = new Scanner(in);
+        int row = 1;
+        int col = 1;
+        String columnLetter;
+
+        out.println("Enter the row and column of the piece for which to highlight valid moves. (e.g. row 2, column A)");
+
+        out.print("Row >>> ");
+        if (scanner.hasNextInt()) {
+            row = scanner.nextInt();
+            if (row < 1 || row > 8) {
+                row = 1;
+            }
+        }
+
+        out.print("Column >>> ");
+        if (scanner.hasNext()) {
+            columnLetter = scanner.next();
+            col = switch (columnLetter) {
+                case "B" -> 2;
+                case "C" -> 3;
+                case "D" -> 4;
+                case "E" -> 5;
+                case "F" -> 6;
+                case "G" -> 7;
+                case "H" -> 8;
+                default -> 1;
+            };
+        }
+
+        ChessPosition position = new ChessPosition(row, col);
+        ChessBoard chessBoard = new ChessBoard();
+        GameBoardUI boardUI = new GameBoardUI(teamColor, position, chessBoard);
+
+        boardUI.drawGame();
     }
 
-    private static void resign() {
+    private static void resign(ChessGame.TeamColor teamColor) {
         // TODO: resign functionality
     }
 

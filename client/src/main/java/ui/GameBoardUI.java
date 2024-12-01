@@ -3,24 +3,29 @@ package ui;
 import static ui.EscapeSequences.*;
 import static java.lang.System.out;
 
+import chess.*;
 import chess.ChessGame.TeamColor;
-import chess.ChessBoard;
-import chess.ChessPiece;
-import chess.ChessPosition;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GameBoardUI {
-    private static TeamColor teamColor = TeamColor.BLACK;
+    private final TeamColor teamColor;
+    private final ChessPosition highlightPosition;
+    private final ChessBoard chessBoard;
+    private Collection<ChessPosition> highlightPositions;
+
     private static final String DARK_COLOR = SET_BG_COLOR_BLUE;
     private static final String LIGHT_COLOR = SET_BG_COLOR_WHITE;
+    private static final String DARK_HIGHLIGHT = SET_BG_COLOR_DARK_GREEN;
+    private static final String LIGHT_HIGHLIGHT = SET_BG_COLOR_GREEN;
     private static final String BORDER_COLOR = SET_BG_COLOR_LIGHT_GREY;
     private static final String TEXT_COLOR = SET_TEXT_COLOR_WHITE;
     private static final String PIECE_COLOR = SET_TEXT_COLOR_BLACK;
 
     private static final String[] HEADER_ROW = {EMPTY, " A ", " B ", " C ", " D ", " E ", " F ", " G ", " H ", EMPTY};
-    private static final ChessBoard CHESS_BOARD = new ChessBoard();
     private static final Map<ChessPiece.PieceType, String> BLACK_TYPE_MAP = getTypeMap(TeamColor.BLACK);
     private static final Map<ChessPiece.PieceType, String> WHITE_TYPE_MAP = getTypeMap(TeamColor.WHITE);
 
@@ -46,25 +51,46 @@ public class GameBoardUI {
         return typeMap;
     }
 
-    public static void main(String[] args) {
-        drawGame();
+    public GameBoardUI(TeamColor teamColor, ChessPosition highlightPosition, ChessBoard chessBoard) {
+        this.teamColor = teamColor;
+        this.highlightPosition = highlightPosition;
+        this.chessBoard = chessBoard;
+    }
+
+    private Collection<ChessPosition> getHighlightPositions() {
+        Collection<ChessPosition> chessPositions = new ArrayList<>();
+
+        if (highlightPosition != null) {
+            ChessGame game = new ChessGame();
+            game.setBoard(chessBoard);
+            Collection<ChessMove> validMoves = game.validMoves(highlightPosition);
+
+            if (validMoves != null) {
+                for (ChessMove move : validMoves) {
+                    ChessPosition pos = move.getEndPosition();
+                    chessPositions.add(pos);
+                }
+            }
+        }
+
+        return chessPositions;
+    }
+
+    public void drawGame() {
+        chessBoard.resetBoard();
+        highlightPositions = getHighlightPositions();
+
         out.println();
-        teamColor = TeamColor.WHITE;
-        drawGame();
+        drawHeader();
+        drawBoard();
+        drawHeader();
+        out.println();
 
         out.print(RESET_BG_COLOR);
         out.print(RESET_TEXT_COLOR);
     }
 
-    private static void drawGame() {
-        CHESS_BOARD.resetBoard();
-
-        drawHeader();
-        drawBoard();
-        drawHeader();
-    }
-
-    private static void drawHeader() {
+    private void drawHeader() {
         out.print(TEXT_COLOR);
         out.print(BORDER_COLOR);
 
@@ -82,7 +108,7 @@ public class GameBoardUI {
         out.println();
     }
 
-    private static void drawBoard() {
+    private void drawBoard() {
         int currentRow = 1;
         int currentCol = 1;
 
@@ -105,28 +131,34 @@ public class GameBoardUI {
         }
     }
 
-    private static void drawRow(int rowNum, int currentRow, int currentCol) {
+    private boolean isInHighlightPositions(ChessPosition currentPosition) {
+        for (ChessPosition position : highlightPositions) {
+            if (position.equals(currentPosition)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void drawRow(int rowNum, int currentRow, int currentCol) {
         out.print(BORDER_COLOR);
         out.print(" " + rowNum + " ");
 
         if (currentRow % 2 == 1) {
             for (int i = 0; i < 4; i++) {
-                out.print(LIGHT_COLOR);
-                drawSquare(currentRow, currentCol);
+                drawSquare(currentRow, currentCol, "LIGHT");
                 currentCol++;
 
-                out.print(DARK_COLOR);
-                drawSquare(currentRow, currentCol);
+                drawSquare(currentRow, currentCol, "DARK");
                 currentCol++;
             }
         } else {
             for (int i = 0; i < 4; i++) {
-                out.print(DARK_COLOR);
-                drawSquare(currentRow, currentCol);
+                drawSquare(currentRow, currentCol, "DARK");
                 currentCol++;
 
-                out.print(LIGHT_COLOR);
-                drawSquare(currentRow, currentCol);
+                drawSquare(currentRow, currentCol, "LIGHT");
                 currentCol++;
             }
         }
@@ -135,7 +167,7 @@ public class GameBoardUI {
         out.print(" " + rowNum + " ");
     }
 
-    private static void drawSquare(int currentRow, int currentCol) {
+    private void drawSquare(int currentRow, int currentCol, String squareColor) {
         if (teamColor == TeamColor.WHITE) {
             currentRow = 9 - currentRow;
         } else {
@@ -143,7 +175,21 @@ public class GameBoardUI {
         }
 
         ChessPosition position = new ChessPosition(currentRow, currentCol);
-        ChessPiece piece = CHESS_BOARD.getPiece(position);
+        ChessPiece piece = chessBoard.getPiece(position);
+
+        if (squareColor.equals("LIGHT")) {
+            if (isInHighlightPositions(position)) {
+                out.print(LIGHT_HIGHLIGHT);
+            } else {
+                out.print(LIGHT_COLOR);
+            }
+        } else {
+            if (isInHighlightPositions(position)) {
+                out.print(DARK_HIGHLIGHT);
+            } else {
+                out.print(DARK_COLOR);
+            }
+        }
 
         if (piece == null) {
             out.print(EMPTY);
