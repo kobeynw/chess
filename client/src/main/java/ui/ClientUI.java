@@ -6,6 +6,10 @@ import chess.ChessPosition;
 import model.GameData;
 import network.ServerFacade;
 import result.*;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
 import static java.lang.System.out;
 import static java.lang.System.in;
@@ -16,13 +20,24 @@ import java.util.Scanner;
 
 import static ui.EscapeSequences.*;
 
-public class ClientUI {
+public class ClientUI implements ServerMessageObserver {
     private static final ServerFacade SERVER_FACADE = new ServerFacade(8080);
     private static String authToken = null;
+    private static ChessGame game = new ChessGame();
+    private static ChessGame.TeamColor teamColor = ChessGame.TeamColor.WHITE;
 
     public static void main(String[] args) {
         welcomeMessage();
         preLoginDisplay();
+    }
+
+    @Override
+    public void notify(ServerMessage message) {
+        switch (message.getServerMessageType()) {
+            case NOTIFICATION -> printNotification(((NotificationMessage) message).getMessage());
+            case ERROR -> printErrorMessage(((ErrorMessage) message).getErrorMessage());
+            case LOAD_GAME -> loadGame(((LoadGameMessage) message).getGame());
+        }
     }
 
     private static void welcomeMessage() {
@@ -40,6 +55,17 @@ public class ClientUI {
         out.println(SET_TEXT_COLOR_RED);
         out.println(errorMsg);
         out.println(RESET_TEXT_COLOR);
+    }
+
+    private void printNotification(String msg) {
+        out.println(SET_TEXT_COLOR_GREEN);
+        out.println(msg);
+        out.println(RESET_TEXT_COLOR);
+    }
+
+    private static void loadGame(ChessGame chessGame) {
+        game = chessGame;
+        redrawBoard();
     }
 
     private static void preLoginDisplay() {
@@ -281,7 +307,7 @@ public class ClientUI {
     private static void playGame() {
         Scanner scanner = new Scanner(in);
         int gameID = 0;
-        ChessGame.TeamColor color = null;
+        boolean colorChosen = false;
 
         out.print("Game ID >>> ");
         if (scanner.hasNextInt()) {
@@ -293,16 +319,20 @@ public class ClientUI {
             String colorInput = scanner.next().toUpperCase();
 
             if (Objects.equals(colorInput.toUpperCase(), "BLACK")) {
-                color = ChessGame.TeamColor.BLACK;
+                teamColor = ChessGame.TeamColor.BLACK;
+                colorChosen = true;
             } else if (Objects.equals(colorInput.toUpperCase(), "WHITE")) {
-                color = ChessGame.TeamColor.WHITE;
+                teamColor = ChessGame.TeamColor.WHITE;
+                colorChosen = true;
             }
         }
 
-        if (gameID >= 1 && color != null) {
+        if (gameID >= 1 && colorChosen) {
             try {
-                SERVER_FACADE.playGame(authToken, color, gameID);
-                gameplayDisplay(color, false);
+                SERVER_FACADE.playGame(authToken, teamColor, gameID);
+                // TODO: websocket play game via websocket
+                // Send CONNECT user game command
+                gameplayDisplay(false);
             } catch (Exception e) {
                 printErrorMessage(e.getMessage());
             }
@@ -322,7 +352,9 @@ public class ClientUI {
 
         if (gameID >= 1) {
             // TODO: server facade observe game via websocket
-            gameplayDisplay(ChessGame.TeamColor.WHITE, true);
+            // Send CONNECT user game command
+            teamColor = ChessGame.TeamColor.WHITE;
+            gameplayDisplay(true);
         } else {
             printErrorMessage("Game observation failed");
         }
@@ -337,7 +369,7 @@ public class ClientUI {
         out.println("5. Observe Game");
     }
 
-    private static void gameplayDisplay(ChessGame.TeamColor teamColor, boolean isObserving) {
+    private static void gameplayDisplay(boolean isObserving) {
         boolean isPlaying = true;
         Scanner scanner = new Scanner(in);
 
@@ -361,26 +393,26 @@ public class ClientUI {
                         break;
                     case 1:
                         if (!isObserving) {
-                            leaveGame(teamColor);
+                            leaveGame();
                         }
                         isPlaying = false;
                         break;
                     case 2:
-                        redrawBoard(teamColor);
+                        redrawBoard();
                         break;
                     case 3:
                         if (!isObserving) {
-                            makeMove(teamColor);
+                            makeMove();
                         } else {
                             printErrorMessage("Cannot make moves while observing");
                         }
                         break;
                     case 4:
-                        highlightMoves(teamColor);
+                        highlightMoves();
                         break;
                     case 5:
                         if (!isObserving) {
-                            resign(teamColor);
+                            resign();
                         } else {
                             printErrorMessage("Cannot resign while observing");
                         }
@@ -396,25 +428,24 @@ public class ClientUI {
         }
     }
 
-    private static void leaveGame(ChessGame.TeamColor teamColor) {
+    private static void leaveGame() {
         // TODO: leave game functionality
+        // Send LEAVE user game command
     }
 
-    private static void redrawBoard(ChessGame.TeamColor teamColor) {
-        // TODO: update chessBoard based on current board
-        ChessBoard chessBoard = new ChessBoard();
+    private static void redrawBoard() {
+        ChessBoard chessBoard = game.getBoard();
         GameBoardUI boardUI = new GameBoardUI(teamColor, null, chessBoard);
 
         boardUI.drawGame();
     }
 
-    private static void makeMove(ChessGame.TeamColor teamColor) {
+    private static void makeMove() {
         // TODO: make move functionality
+        // Send MAKE_MOVE user game command
     }
 
-    private static void highlightMoves(ChessGame.TeamColor teamColor) {
-        // TODO: update chessBoard based on current board
-
+    private static void highlightMoves() {
         Scanner scanner = new Scanner(in);
         int row = 1;
         int col = 1;
@@ -446,14 +477,15 @@ public class ClientUI {
         }
 
         ChessPosition position = new ChessPosition(row, col);
-        ChessBoard chessBoard = new ChessBoard();
+        ChessBoard chessBoard = game.getBoard();
         GameBoardUI boardUI = new GameBoardUI(teamColor, position, chessBoard);
 
         boardUI.drawGame();
     }
 
-    private static void resign(ChessGame.TeamColor teamColor) {
+    private static void resign() {
         // TODO: resign functionality
+        // Send RESIGN user game command
     }
 
     private static void gameplayHelp() {
