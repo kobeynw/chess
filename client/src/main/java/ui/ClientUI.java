@@ -1,8 +1,6 @@
 package ui;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPosition;
+import chess.*;
 import model.GameData;
 import network.ServerFacade;
 import result.*;
@@ -21,7 +19,7 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class ClientUI implements ServerMessageObserver {
-    private static final ServerFacade SERVER_FACADE = new ServerFacade(8080);
+    private static final ServerFacade SERVER_FACADE = new ServerFacade(8080, new ClientUI());
     private static String authToken = null;
     private static ChessGame game = new ChessGame();
     private static ChessGame.TeamColor teamColor = ChessGame.TeamColor.WHITE;
@@ -57,7 +55,7 @@ public class ClientUI implements ServerMessageObserver {
         out.println(RESET_TEXT_COLOR);
     }
 
-    private void printNotification(String msg) {
+    private static void printNotification(String msg) {
         out.println(SET_TEXT_COLOR_GREEN);
         out.println(msg);
         out.println(RESET_TEXT_COLOR);
@@ -330,9 +328,9 @@ public class ClientUI implements ServerMessageObserver {
         if (gameID >= 1 && colorChosen) {
             try {
                 SERVER_FACADE.playGame(authToken, teamColor, gameID);
-                // TODO: websocket play game via websocket
-                // Send CONNECT user game command
-                gameplayDisplay(false);
+                SERVER_FACADE.connect(authToken, gameID);
+
+                gameplayDisplay(gameID, false);
             } catch (Exception e) {
                 printErrorMessage(e.getMessage());
             }
@@ -351,10 +349,14 @@ public class ClientUI implements ServerMessageObserver {
         }
 
         if (gameID >= 1) {
-            // TODO: server facade observe game via websocket
-            // Send CONNECT user game command
+            try {
+                SERVER_FACADE.connect(authToken, gameID);
+            } catch (Exception e) {
+                printErrorMessage(e.getMessage());
+            }
+
             teamColor = ChessGame.TeamColor.WHITE;
-            gameplayDisplay(true);
+            gameplayDisplay(gameID, true);
         } else {
             printErrorMessage("Game observation failed");
         }
@@ -369,7 +371,7 @@ public class ClientUI implements ServerMessageObserver {
         out.println("5. Observe Game");
     }
 
-    private static void gameplayDisplay(boolean isObserving) {
+    private static void gameplayDisplay(int gameID, boolean isObserving) {
         boolean isPlaying = true;
         Scanner scanner = new Scanner(in);
 
@@ -393,7 +395,7 @@ public class ClientUI implements ServerMessageObserver {
                         break;
                     case 1:
                         if (!isObserving) {
-                            leaveGame();
+                            leaveGame(gameID);
                         }
                         isPlaying = false;
                         break;
@@ -402,7 +404,7 @@ public class ClientUI implements ServerMessageObserver {
                         break;
                     case 3:
                         if (!isObserving) {
-                            makeMove();
+                            makeMove(gameID);
                         } else {
                             printErrorMessage("Cannot make moves while observing");
                         }
@@ -412,7 +414,7 @@ public class ClientUI implements ServerMessageObserver {
                         break;
                     case 5:
                         if (!isObserving) {
-                            resign();
+                            resign(gameID);
                         } else {
                             printErrorMessage("Cannot resign while observing");
                         }
@@ -428,9 +430,12 @@ public class ClientUI implements ServerMessageObserver {
         }
     }
 
-    private static void leaveGame() {
-        // TODO: leave game functionality
-        // Send LEAVE user game command
+    private static void leaveGame(int gameID) {
+        try {
+            SERVER_FACADE.leave(authToken, gameID);
+        }  catch (Exception e) {
+            printErrorMessage(e.getMessage());
+        }
     }
 
     private static void redrawBoard() {
@@ -440,18 +445,13 @@ public class ClientUI implements ServerMessageObserver {
         boardUI.drawGame();
     }
 
-    private static void makeMove() {
-        // TODO: make move functionality
-        // Send MAKE_MOVE user game command
-    }
-
-    private static void highlightMoves() {
+    private static ChessPosition getPositionInput(String pieceDescription) {
         Scanner scanner = new Scanner(in);
         int row = 1;
         int col = 1;
         String columnLetter;
 
-        out.println("Enter the row and column of the piece for which to highlight valid moves. (e.g. row 2, column A)");
+        out.println("Enter the row and column of " + pieceDescription + ". (e.g. row 2, column A)");
 
         out.print("Row >>> ");
         if (scanner.hasNextInt()) {
@@ -476,16 +476,63 @@ public class ClientUI implements ServerMessageObserver {
             };
         }
 
-        ChessPosition position = new ChessPosition(row, col);
+        return new ChessPosition(row, col);
+    }
+
+    private static ChessPiece.PieceType getPromotionPiece() {
+        out.println("Enter the promotion piece type. (e.g. QUEEN)");
+        out.print("Promotion Piece >>> ");
+
+        Scanner scanner = new Scanner(in);
+        ChessPiece.PieceType promotionPiece = null;
+        String promotionInput;
+
+        if (scanner.hasNext()) {
+            promotionInput = scanner.next();
+            promotionPiece = switch (promotionInput.toUpperCase()) {
+                case "QUEEN" -> ChessPiece.PieceType.QUEEN;
+                case "BISHOP" -> ChessPiece.PieceType.BISHOP;
+                case "ROOK" -> ChessPiece.PieceType.ROOK;
+                case "KNIGHT" -> ChessPiece.PieceType.KNIGHT;
+                default -> null;
+            };
+        }
+
+        return promotionPiece;
+    }
+
+    private static void makeMove(int gameID) {
+        ChessPosition fromPosition = getPositionInput("the piece to move");
+        ChessPosition toPosition = getPositionInput("the position to move to");
+        ChessMove move = new ChessMove(fromPosition, toPosition, null);
+        
+        ChessPiece piece = game.getBoard().getPiece(fromPosition);
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && (toPosition.getRow() == 1 || toPosition.getRow() == 8)) {
+            ChessPiece.PieceType promotionPiece = getPromotionPiece();
+            move = new ChessMove(fromPosition, toPosition, promotionPiece);
+        }
+
+        try {
+            SERVER_FACADE.makeMove(authToken, gameID, move);
+        }  catch (Exception e) {
+            printErrorMessage(e.getMessage());
+        }
+    }
+
+    private static void highlightMoves() {
+        ChessPosition position = getPositionInput("the piece to highlight valid moves for");
         ChessBoard chessBoard = game.getBoard();
         GameBoardUI boardUI = new GameBoardUI(teamColor, position, chessBoard);
 
         boardUI.drawGame();
     }
 
-    private static void resign() {
-        // TODO: resign functionality
-        // Send RESIGN user game command
+    private static void resign(int gameID) {
+        try {
+            SERVER_FACADE.resign(authToken, gameID);
+        }  catch (Exception e) {
+            printErrorMessage(e.getMessage());
+        }
     }
 
     private static void gameplayHelp() {
