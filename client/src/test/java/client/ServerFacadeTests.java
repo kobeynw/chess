@@ -6,6 +6,7 @@ import network.ServerFacade;
 import org.junit.jupiter.api.*;
 import server.Server;
 import result.*;
+import ui.ClientUI;
 
 import java.util.Collection;
 
@@ -22,7 +23,7 @@ public class ServerFacadeTests {
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
 
-        serverFacade = new ServerFacade(port);
+        serverFacade = new ServerFacade(port, new ClientUI());
         try {
             serverFacade.clearDatabase();
         } catch (Exception e) {

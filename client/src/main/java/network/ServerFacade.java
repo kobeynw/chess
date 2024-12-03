@@ -1,61 +1,85 @@
 package network;
 
 import chess.ChessGame;
+import chess.ChessMove;
 import result.*;
 import request.*;
+import ui.ServerMessageObserver;
 
 public class ServerFacade {
-    private final HttpCommunicator comm = new HttpCommunicator();
-    private final String urlBase;
+    private final HttpCommunicator httpComm;
+    private final WebsocketCommunicator webComm;
+    private final String httpUrlBase;
+    ServerMessageObserver observer;
 
-    public ServerFacade(int port) {
-        this.urlBase = "http://localhost:" + port;
+    public ServerFacade(int port, ServerMessageObserver observer) {
+        this.httpUrlBase = "http://localhost:" + port;
+        String webUrl = "ws://localhost:" + port + "/ws";
+        this.observer = observer;
+        this.httpComm = new HttpCommunicator();
+        this.webComm = new WebsocketCommunicator(observer, webUrl);
     }
 
     public RegisterResult register(String username, String password, String email) throws Exception {
         RegisterRequest registerRequest = new RegisterRequest(username, password, email);
-        String urlString = urlBase + "/user";
+        String urlString = httpUrlBase + "/user";
 
-        return (RegisterResult) comm.doPost(urlString, registerRequest);
+        return (RegisterResult) httpComm.doPost(urlString, registerRequest);
     }
 
     public LoginResult login(String username, String password) throws Exception {
         LoginRequest loginRequest = new LoginRequest(username, password);
-        String urlString = urlBase + "/session";
+        String urlString = httpUrlBase + "/session";
 
-        return (LoginResult) comm.doPost(urlString, loginRequest);
+        return (LoginResult) httpComm.doPost(urlString, loginRequest);
     }
 
     public void logout(String authToken) throws Exception {
         LogoutRequest logoutRequest = new LogoutRequest(authToken);
-        String urlString = urlBase + "/session";
+        String urlString = httpUrlBase + "/session";
 
-        comm.doDelete(urlString, logoutRequest);
+        httpComm.doDelete(urlString, logoutRequest);
     }
 
     public CreateGameResult createGame(String authToken, String gameName) throws Exception {
         CreateGameRequest createGameRequest = new CreateGameRequest(authToken, gameName);
-        String urlString = urlBase + "/game";
+        String urlString = httpUrlBase + "/game";
 
-        return (CreateGameResult) comm.doPost(urlString, createGameRequest);
+        return (CreateGameResult) httpComm.doPost(urlString, createGameRequest);
     }
 
     public ListGamesResult listGames(String authToken) throws Exception {
         ListGamesRequest listGamesRequest = new ListGamesRequest(authToken);
-        String urlString = urlBase + "/game";
+        String urlString = httpUrlBase + "/game";
 
-        return comm.doGet(urlString, listGamesRequest);
+        return httpComm.doGet(urlString, listGamesRequest);
     }
 
     public void playGame(String authToken, ChessGame.TeamColor teamColor, int gameID) throws Exception {
         JoinGameRequest joinGameRequest = new JoinGameRequest(authToken, teamColor, gameID);
-        String urlString = urlBase + "/game";
+        String urlString = httpUrlBase + "/game";
 
-        comm.doPut(urlString, joinGameRequest);
+        httpComm.doPut(urlString, joinGameRequest);
     }
 
     public void clearDatabase() throws Exception {
-        String urlString = urlBase + "/db";
-        comm.doDelete(urlString, null);
+        String urlString = httpUrlBase + "/db";
+        httpComm.doDelete(urlString, null);
+    }
+
+    public void connect(String authToken, int gameID) throws Exception {
+        webComm.doConnect(authToken, gameID);
+    }
+
+    public void makeMove(String authToken, int gameID, ChessMove move) throws Exception {
+        webComm.doMakeMove(authToken, gameID, move);
+    }
+
+    public void leave(String authToken, int gameID) throws Exception {
+        webComm.doLeave(authToken, gameID);
+    }
+
+    public void resign(String authToken, int gameID) throws Exception {
+        webComm.doResign(authToken, gameID);
     }
 }
