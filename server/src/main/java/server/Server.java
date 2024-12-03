@@ -46,7 +46,7 @@ public class Server {
         Spark.put("/game", (req, res) -> (new JoinGameHandler(gameDao, authDao)).handleRequest(req, res));
         Spark.get("/game", (req, res) -> (new ListGamesHandler(gameDao, authDao)).handleRequest(req, res));
 
-        Spark.webSocket("/ws", new WebSocketHandler(gameDao, authDao));
+        Spark.webSocket("/ws", new WebSocketHandler(authDao));
 
         Spark.delete("/db", (req, res) -> (new ClearApplicationHandler(userDao, authDao, gameDao)).handleRequest(req, res));
     }
