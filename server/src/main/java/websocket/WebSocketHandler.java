@@ -16,10 +16,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.adapters.GameCommandAdapter;
 import websocket.commands.*;
-import websocket.messages.ErrorMessage;
-import websocket.messages.LoadGameMessage;
-import websocket.messages.NotificationMessage;
-import websocket.messages.ServerMessage;
+import websocket.messages.*;
 
 import java.io.IOException;
 
@@ -89,32 +86,6 @@ public class WebSocketHandler {
         return null;
     }
 
-//    private void sendBroadcast(String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
-//            throws IOException {
-//        if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
-//            NotificationMessage notificationMessage = new NotificationMessage(type, message);
-//            String broadcastMessage = new Gson().toJson(notificationMessage);
-//            connections.broadcast(username, broadcastMessage);
-//        } else if (type.equals(ServerMessage.ServerMessageType.LOAD_GAME)) {
-//            LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
-//            String rootMessage = new Gson().toJson(loadGameMessage);
-//            connections.broadcast(username, rootMessage);
-//        }
-//    }
-//
-//    private void sendToRoot(String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
-//            throws IOException {
-//        if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
-//            NotificationMessage notificationMessage = new NotificationMessage(type, message);
-//            String broadcastMessage = new Gson().toJson(notificationMessage);
-//            connections.sendToRootClient(username, broadcastMessage);
-//        } else if (type.equals(ServerMessage.ServerMessageType.LOAD_GAME)) {
-//            LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
-//            String rootMessage = new Gson().toJson(loadGameMessage);
-//            connections.sendToRootClient(username, rootMessage);
-//        }
-//    }
-
     private void connect(Session session, String username, ChessGame.TeamColor teamColor, ConnectCommand command)
             throws IOException, DataAccessException {
         connections.add(username, session);
@@ -130,14 +101,8 @@ public class WebSocketHandler {
             broadcastString = String.format("%s connected to the game as an observer.", username);
         }
 
-        LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
-        String rootMessage = new Gson().toJson(loadGameMessage);
-        connections.sendToRootClient(username, rootMessage);
-
-        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
-        NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
-        String broadcastMessage = new Gson().toJson(notificationMessage);
-        connections.broadcast(username, broadcastMessage);
+        sendMessage(false, username, ServerMessage.ServerMessageType.LOAD_GAME, null, game);
+        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
     }
 
     private void makeMove(String username, MakeMoveCommand command)
@@ -162,47 +127,32 @@ public class WebSocketHandler {
                 gameDao.updateGame(gameData, game);
 
                 String moveString = String.format("%s moved a %s to %s.", username, piece, toPosition);
-                ServerMessage.ServerMessageType moveMessageType = ServerMessage.ServerMessageType.NOTIFICATION;
-                NotificationMessage moveMessage = new NotificationMessage(moveMessageType, moveString);
-                String broadcastMoveMessage = new Gson().toJson(moveMessage);
-                connections.broadcast(username, broadcastMoveMessage);
-
-                LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
-                String loadGameMessageString = new Gson().toJson(loadGameMessage);
-                connections.broadcast(null, loadGameMessageString);
+                sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, moveString, null);
+                sendMessage(true, null, ServerMessage.ServerMessageType.LOAD_GAME, null, game);
 
                 if (game.isInCheck(oppositeColor)) {
-                    String broadcastString = String.format("%s is in check!", oppositeColor);
-                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
-                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
-                    String broadcastMessage = new Gson().toJson(notificationMessage);
-                    connections.broadcast(null, broadcastMessage);
+                    String checkString = String.format("%s is in check!", oppositeColor);
+                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, checkString, null);
                 } else if (game.isInCheckmate(oppositeColor)) {
-                    String broadcastString = String.format("Checkmate! %s wins!", username);
-                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
-                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
-                    String broadcastMessage = new Gson().toJson(notificationMessage);
-                    connections.broadcast(null, broadcastMessage);
+                    String checkmateString = String.format("Checkmate! %s wins!", username);
+                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, checkmateString, null);
 
                     game.setFinished(true);
                     gameDao.updateGame(gameData, game);
                 } else if (game.isInStalemate(oppositeColor)) {
-                    String broadcastString = "Stalemate! It's a draw!";
-                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
-                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
-                    String broadcastMessage = new Gson().toJson(notificationMessage);
-                    connections.broadcast(null, broadcastMessage);
+                    String stalemateString = "Stalemate! It's a draw!";
+                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, stalemateString, null);
 
                     game.setFinished(true);
                     gameDao.updateGame(gameData, game);
                 }
             } catch (InvalidMoveException e) {
-                // TODO: send error message that the move is invalid
-                System.out.println("Invalid move.");
+                String errorString = "Invalid move.";
+                sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null);
             }
         } else {
-            // TODO: send error message if the game is already finished
-            System.out.println("Game already finished.");
+            String errorString = "Game already finished.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null);
         }
     }
 
@@ -219,10 +169,7 @@ public class WebSocketHandler {
             broadcastString = String.format("%s stopped observing the game.", username);
         }
 
-        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
-        NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
-        String broadcastMessage = new Gson().toJson(notificationMessage);
-        connections.broadcast(username, broadcastMessage);
+        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
 
         connections.remove(username);
     }
@@ -237,15 +184,34 @@ public class WebSocketHandler {
         gameDao.updateGame(gameData, currentGame);
 
         String rootString = "You resigned from the game";
+        sendMessage(false, username, ServerMessage.ServerMessageType.LOAD_GAME, rootString, null);
+
         String broadcastString = String.format("%s resigned from the game.", username);
-        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
+    }
 
-        NotificationMessage rootNotification = new NotificationMessage(messageType, rootString);
-        String rootMessage = new Gson().toJson(rootNotification);
-        connections.sendToRootClient(username, rootMessage);
-
-        NotificationMessage broadcastNotification = new NotificationMessage(messageType, broadcastString);
-        String broadcastMessage = new Gson().toJson(broadcastNotification);
-        connections.broadcast(username, broadcastMessage);
+    private void sendMessage(boolean isBroadcast, String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
+            throws IOException {
+        if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
+            NotificationMessage notificationMessage = new NotificationMessage(type, message);
+            String messageString = new Gson().toJson(notificationMessage);
+            if (isBroadcast) {
+                connections.broadcast(username, messageString);
+            } else {
+                connections.sendToRootClient(username, messageString);
+            }
+        } else if (type.equals(ServerMessage.ServerMessageType.LOAD_GAME)) {
+            LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
+            String messageString = new Gson().toJson(loadGameMessage);
+            if (isBroadcast) {
+                connections.broadcast(username, messageString);
+            } else {
+                connections.sendToRootClient(username, messageString);
+            }
+        } else if (type.equals(ServerMessage.ServerMessageType.ERROR)) {
+            ErrorMessage errorMessage = new ErrorMessage(type, message);
+            String messageString = new Gson().toJson(errorMessage);
+            connections.sendToRootClient(username, messageString);
+        }
     }
 }
