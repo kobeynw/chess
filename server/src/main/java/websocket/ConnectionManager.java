@@ -30,7 +30,11 @@ public class ConnectionManager {
     public void broadcast(String usernameToExclude, String message) throws IOException {
         for (var c : connections.values()) {
             if (c.session.isOpen()) {
-                if (usernameToExclude != null && !c.username.equals(usernameToExclude)) {
+                if (usernameToExclude != null) {
+                    if (!c.username.equals(usernameToExclude)) {
+                        c.send(message);
+                    }
+                } else {
                     c.send(message);
                 }
             }

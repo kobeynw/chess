@@ -1,6 +1,6 @@
 package websocket;
 
-import chess.ChessGame;
+import chess.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -11,7 +11,6 @@ import model.AuthData;
 
 import model.GameData;
 
-import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
@@ -36,38 +35,45 @@ public class WebSocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session session, String message) {
+    public void onMessage(Session session, String message) throws IOException {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(UserGameCommand.class, new GameCommandAdapter());
+        Gson gson = builder.create();
+        UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
+
+        String username = null;
         try {
-            GsonBuilder builder = new GsonBuilder();
-            builder.registerTypeAdapter(UserGameCommand.class, new GameCommandAdapter());
-            Gson gson = builder.create();
-            UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
+            username = getUsername(command.getAuthToken());
+        } catch (DataAccessException ex) {
+            // TODO: print unauthorized error
+            ex.printStackTrace();
+        }
 
+        try {
             int gameID = command.getGameID();
-            String username = getUsername(command.getAuthToken());
             ChessGame.TeamColor teamColor = getTeamColor(username, gameID);
-
-            saveSession(gameID, session);
-
-            System.out.println(command.getCommandType());
 
             switch (command.getCommandType()) {
                 case CONNECT -> connect(session, username, teamColor, (ConnectCommand) command);
-                case MAKE_MOVE -> makeMove(session, username, (MakeMoveCommand) command);
-                case LEAVE -> leaveGame(session, username, (LeaveGameCommand) command);
-                case RESIGN -> resign(session, username, (ResignCommand) command);
+                case MAKE_MOVE -> makeMove(username, (MakeMoveCommand) command);
+                case LEAVE -> leaveGame(username, teamColor, (LeaveGameCommand) command);
+                case RESIGN -> resign(username, (ResignCommand) command);
             }
         } catch (Exception ex) {
             ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.ERROR;
-            sendMessage(session.getRemote(), new ErrorMessage(messageType, "Error: " + ex.getMessage()));
-
-            System.out.println(ex.getMessage());
+            ErrorMessage errorMessage = new ErrorMessage(messageType, "Error: " + ex.getMessage());
+            String rootMessage = new Gson().toJson(errorMessage);
+            connections.sendToRootClient(username, rootMessage);
         }
     }
 
     private String getUsername(String authToken) throws DataAccessException {
         AuthData authData = authDao.getAuth(authToken);
-        return authData.username();
+        if (authData != null) {
+            return authData.username();
+        } else {
+            throw new DataAccessException("Unauthorized");
+        }
     }
 
     private ChessGame.TeamColor getTeamColor(String username, int gameID) throws DataAccessException {
@@ -83,7 +89,34 @@ public class WebSocketHandler {
         return null;
     }
 
-    private void connect(Session session, String username, ChessGame.TeamColor teamColor, ConnectCommand command) throws IOException, DataAccessException {
+//    private void sendBroadcast(String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
+//            throws IOException {
+//        if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
+//            NotificationMessage notificationMessage = new NotificationMessage(type, message);
+//            String broadcastMessage = new Gson().toJson(notificationMessage);
+//            connections.broadcast(username, broadcastMessage);
+//        } else if (type.equals(ServerMessage.ServerMessageType.LOAD_GAME)) {
+//            LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
+//            String rootMessage = new Gson().toJson(loadGameMessage);
+//            connections.broadcast(username, rootMessage);
+//        }
+//    }
+//
+//    private void sendToRoot(String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
+//            throws IOException {
+//        if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
+//            NotificationMessage notificationMessage = new NotificationMessage(type, message);
+//            String broadcastMessage = new Gson().toJson(notificationMessage);
+//            connections.sendToRootClient(username, broadcastMessage);
+//        } else if (type.equals(ServerMessage.ServerMessageType.LOAD_GAME)) {
+//            LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
+//            String rootMessage = new Gson().toJson(loadGameMessage);
+//            connections.sendToRootClient(username, rootMessage);
+//        }
+//    }
+
+    private void connect(Session session, String username, ChessGame.TeamColor teamColor, ConnectCommand command)
+            throws IOException, DataAccessException {
         connections.add(username, session);
 
         int gameID = command.getGameID();
@@ -101,40 +134,118 @@ public class WebSocketHandler {
         String rootMessage = new Gson().toJson(loadGameMessage);
         connections.sendToRootClient(username, rootMessage);
 
-        NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, broadcastString);
+        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+        NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
         String broadcastMessage = new Gson().toJson(notificationMessage);
         connections.broadcast(username, broadcastMessage);
     }
 
-    private void makeMove(Session session, String username, MakeMoveCommand command) {
-        // TODO: implement makeMove
-        // MAKE_MOVE received
-        // -> verify move validity
-        // -> update game and database
-        // -> send a LOAD_GAME message to all clients
-        // -> send a NOTIFICATION to all other clients with what move was made
-        // -> If the move results in check, checkmate, or stalemate, send a NOTIFICATION message to all clients
+    private void makeMove(String username, MakeMoveCommand command)
+            throws IOException, DataAccessException {
+        int gameID = command.getGameID();
+        GameData gameData = gameDao.getGame(gameID);
+        ChessGame game = gameData.game();
+        ChessMove move = command.getMove();
+        ChessPiece.PieceType piece = game.getBoard().getPiece(move.getStartPosition()).getPieceType();
+        ChessPosition toPosition = move.getEndPosition();
+
+        if (!game.isFinished()) {
+            try {
+                ChessGame.TeamColor currentColor = game.getTeamTurn();
+                ChessGame.TeamColor oppositeColor = ChessGame.TeamColor.WHITE;
+                if (currentColor.equals(ChessGame.TeamColor.WHITE)) {
+                    oppositeColor = ChessGame.TeamColor.BLACK;
+                }
+
+                game.makeMove(move);
+                game.setTeamTurn(oppositeColor);
+                gameDao.updateGame(gameData, game);
+
+                String moveString = String.format("%s moved a %s to %s.", username, piece, toPosition);
+                ServerMessage.ServerMessageType moveMessageType = ServerMessage.ServerMessageType.NOTIFICATION;
+                NotificationMessage moveMessage = new NotificationMessage(moveMessageType, moveString);
+                String broadcastMoveMessage = new Gson().toJson(moveMessage);
+                connections.broadcast(username, broadcastMoveMessage);
+
+                LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
+                String loadGameMessageString = new Gson().toJson(loadGameMessage);
+                connections.broadcast(null, loadGameMessageString);
+
+                if (game.isInCheck(oppositeColor)) {
+                    String broadcastString = String.format("%s is in check!", oppositeColor);
+                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
+                    String broadcastMessage = new Gson().toJson(notificationMessage);
+                    connections.broadcast(null, broadcastMessage);
+                } else if (game.isInCheckmate(oppositeColor)) {
+                    String broadcastString = String.format("Checkmate! %s wins!", username);
+                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
+                    String broadcastMessage = new Gson().toJson(notificationMessage);
+                    connections.broadcast(null, broadcastMessage);
+
+                    game.setFinished(true);
+                    gameDao.updateGame(gameData, game);
+                } else if (game.isInStalemate(oppositeColor)) {
+                    String broadcastString = "Stalemate! It's a draw!";
+                    ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+                    NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
+                    String broadcastMessage = new Gson().toJson(notificationMessage);
+                    connections.broadcast(null, broadcastMessage);
+
+                    game.setFinished(true);
+                    gameDao.updateGame(gameData, game);
+                }
+            } catch (InvalidMoveException e) {
+                // TODO: send error message that the move is invalid
+                System.out.println("Invalid move.");
+            }
+        } else {
+            // TODO: send error message if the game is already finished
+            System.out.println("Game already finished.");
+        }
     }
 
-    private void leaveGame(Session session, String username, LeaveGameCommand command) {
-        // TODO: implement leaveGame
-        // LEAVE received
-        // -> update game and database
-        // -> send a NOTIFICATION to other clients with who left the game
+    private void leaveGame(String username, ChessGame.TeamColor teamColor, LeaveGameCommand command)
+            throws IOException, DataAccessException {
+        int gameID = command.getGameID();
+        GameData gameData = gameDao.getGame(gameID);
+
+        String broadcastString;
+        if (teamColor != null) {
+            gameDao.removePlayer(gameData, username, teamColor);
+            broadcastString = String.format("%s left the game (%s is now available).", username, teamColor);
+        } else {
+            broadcastString = String.format("%s stopped observing the game.", username);
+        }
+
+        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+        NotificationMessage notificationMessage = new NotificationMessage(messageType, broadcastString);
+        String broadcastMessage = new Gson().toJson(notificationMessage);
+        connections.broadcast(username, broadcastMessage);
+
+        connections.remove(username);
     }
 
-    private void resign(Session session, String username, ResignCommand command) {
-        // TODO: implement resign
-        // RESIGN received
-        // -> game is marked as over (no more moves can be made at this point): update game and database
-        // -> send a NOTIFICATION to all clients with who resigned
-    }
+    private void resign(String username, ResignCommand command)
+            throws IOException, DataAccessException {
+        int gameID = command.getGameID();
+        GameData gameData = gameDao.getGame(gameID);
+        ChessGame currentGame = gameData.game();
 
-    private void sendMessage(RemoteEndpoint remote, ErrorMessage errorMessage) {
-        // TODO: implement sendMessage
-    }
+        currentGame.setFinished(true);
+        gameDao.updateGame(gameData, currentGame);
 
-    private void saveSession(int gameID, Session session) {
-        // TODO: implement saveSession
+        String rootString = "You resigned from the game";
+        String broadcastString = String.format("%s resigned from the game.", username);
+        ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.NOTIFICATION;
+
+        NotificationMessage rootNotification = new NotificationMessage(messageType, rootString);
+        String rootMessage = new Gson().toJson(rootNotification);
+        connections.sendToRootClient(username, rootMessage);
+
+        NotificationMessage broadcastNotification = new NotificationMessage(messageType, broadcastString);
+        String broadcastMessage = new Gson().toJson(broadcastNotification);
+        connections.broadcast(username, broadcastMessage);
     }
 }

@@ -54,7 +54,7 @@ public class WebsocketCommunicator extends Endpoint {
     }
 
     public void doResign(String authToken, int gameID) throws Exception {
-        ResignCommand resignCommand = new ResignCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
+        ResignCommand resignCommand = new ResignCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
         this.session.getBasicRemote().sendText(new Gson().toJson(resignCommand));
     }
 
