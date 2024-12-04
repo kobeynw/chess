@@ -12,9 +12,19 @@ import java.util.Collection;
 public class ChessGame {
     private ChessBoard board = new ChessBoard();
     private ChessGame.TeamColor teamTurn = TeamColor.WHITE;
+    private boolean isFinished;
 
     public ChessGame() {
         this.board.resetBoard();
+        this.isFinished = false;
+    }
+
+    public void setFinished(boolean finished) {
+        this.isFinished = finished;
+    }
+
+    public boolean isFinished() {
+        return this.isFinished;
     }
 
     /**
