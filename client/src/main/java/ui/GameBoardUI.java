@@ -77,7 +77,6 @@ public class GameBoardUI {
     }
 
     public void drawGame() {
-        chessBoard.resetBoard();
         highlightPositions = getHighlightPositions();
 
         out.println();

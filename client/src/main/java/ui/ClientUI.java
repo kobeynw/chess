@@ -195,7 +195,6 @@ public class ClientUI implements ServerMessageObserver {
         postLoginHelp();
 
         while (isLoggedIn) {
-            out.println("(POST LOGIN)");
             out.print("[");
             out.print(SET_TEXT_COLOR_GREEN);
             out.print("LOGGED IN");
@@ -378,7 +377,6 @@ public class ClientUI implements ServerMessageObserver {
         gameplayHelp();
 
         while (isPlaying) {
-            out.println("(GAMEPLAY)");
             out.print("[");
             out.print(SET_TEXT_COLOR_GREEN);
             out.print("LOGGED IN");
