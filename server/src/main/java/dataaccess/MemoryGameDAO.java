@@ -89,6 +89,11 @@ public class MemoryGameDAO implements GameDAO {
         throw new DataAccessException("Game Data Not Found");
     }
 
+    public void removePlayer(GameData gameData, String username, ChessGame.TeamColor playerColor)
+            throws DataAccessException {}
+
+    public void updateGame(GameData gameData, ChessGame game) throws DataAccessException {}
+
     public void clearData() {
         gameDataStorage = new ArrayList<>();
         gameIDs = new int[10000];

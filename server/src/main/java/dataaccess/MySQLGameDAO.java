@@ -156,6 +156,47 @@ public class MySQLGameDAO implements GameDAO {
         }
     }
 
+    public void removePlayer(GameData gameData, String username, ChessGame.TeamColor playerColor)
+            throws DataAccessException {
+        int gameID = gameData.gameID();
+
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "";
+            if (playerColor == ChessGame.TeamColor.BLACK) {
+                statement = "UPDATE Game SET black_username = ? WHERE game_id = ?";
+            } else {
+                statement = "UPDATE Game SET white_username = ? WHERE game_id = ?";
+            }
+
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setNull(1, java.sql.Types.VARCHAR);
+                preparedStatement.setInt(2, gameID);
+
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Update GameData in Database: %s", e.getMessage()));
+        }
+    }
+
+    public void updateGame(GameData gameData, ChessGame game) throws DataAccessException {
+        int gameID = gameData.gameID();
+        String gameString = new Gson().toJson(game, ChessGame.class);
+
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "UPDATE Game SET game = ? WHERE game_id = ?";
+
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setString(1, gameString);
+                preparedStatement.setInt(2, gameID);
+
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to Update GameData in Database: %s", e.getMessage()));
+        }
+    }
+
     public void clearData() throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE Game")) {
