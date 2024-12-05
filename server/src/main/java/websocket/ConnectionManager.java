@@ -8,8 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
     public final ConcurrentHashMap<String, Connection> connections = new ConcurrentHashMap<>();
 
-    public void add(String username, Session session) {
-        var connection = new Connection(username, session);
+    public void add(String username, Session session, int gameID) {
+        var connection = new Connection(username, session, gameID);
         connections.put(username, connection);
     }
 
@@ -27,15 +27,31 @@ public class ConnectionManager {
         }
     }
 
-    public void broadcast(String usernameToExclude, String message) throws IOException {
+    private int getRootGameID(String rootUsername) {
         for (var c : connections.values()) {
             if (c.session.isOpen()) {
-                if (usernameToExclude != null) {
-                    if (!c.username.equals(usernameToExclude)) {
+                if (rootUsername != null) {
+                    if (c.username.equals(rootUsername)) {
+                        return c.gameID;
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    public void broadcast(String rootUsername, String message, boolean toRoot) throws IOException {
+        int rootGameID = getRootGameID(rootUsername);
+
+        for (var c : connections.values()) {
+            if (c.session.isOpen()) {
+                if (c.gameID == rootGameID) {
+                    if (toRoot) {
+                        c.send(message);
+                    } else if (!c.username.equals(rootUsername)) {
                         c.send(message);
                     }
-                } else {
-                    c.send(message);
                 }
             }
         }

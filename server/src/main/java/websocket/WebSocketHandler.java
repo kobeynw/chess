@@ -42,8 +42,9 @@ public class WebSocketHandler {
         try {
             username = getUsername(command.getAuthToken());
         } catch (DataAccessException ex) {
-            // TODO: print unauthorized error
-            ex.printStackTrace();
+            connections.add("", session, 0);
+            sendMessage(false, "", ServerMessage.ServerMessageType.ERROR, ex.getMessage(), null, false);
+            connections.remove("");
         }
 
         try {
@@ -57,10 +58,10 @@ public class WebSocketHandler {
                 case RESIGN -> resign(username, (ResignCommand) command);
             }
         } catch (Exception ex) {
-            ServerMessage.ServerMessageType messageType = ServerMessage.ServerMessageType.ERROR;
-            ErrorMessage errorMessage = new ErrorMessage(messageType, "Error: " + ex.getMessage());
-            String rootMessage = new Gson().toJson(errorMessage);
-            connections.sendToRootClient(username, rootMessage);
+            connections.add(username, session, 0);
+            String errorString = "Error: Session Halted";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
+            connections.remove(username);
         }
     }
 
@@ -69,7 +70,7 @@ public class WebSocketHandler {
         if (authData != null) {
             return authData.username();
         } else {
-            throw new DataAccessException("Unauthorized");
+            throw new DataAccessException("Error: Unauthorized");
         }
     }
 
@@ -88,9 +89,9 @@ public class WebSocketHandler {
 
     private void connect(Session session, String username, ChessGame.TeamColor teamColor, ConnectCommand command)
             throws IOException, DataAccessException {
-        connections.add(username, session);
-
         int gameID = command.getGameID();
+        connections.add(username, session, gameID);
+
         GameData gameData = gameDao.getGame(gameID);
         ChessGame game = gameData.game();
 
@@ -101,8 +102,8 @@ public class WebSocketHandler {
             broadcastString = String.format("%s connected to the game as an observer.", username);
         }
 
-        sendMessage(false, username, ServerMessage.ServerMessageType.LOAD_GAME, null, game);
-        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
+        sendMessage(false, username, ServerMessage.ServerMessageType.LOAD_GAME, null, game, false);
+        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null, false);
     }
 
     private void makeMove(String username, MakeMoveCommand command)
@@ -113,6 +114,20 @@ public class WebSocketHandler {
         ChessMove move = command.getMove();
         ChessPiece.PieceType piece = game.getBoard().getPiece(move.getStartPosition()).getPieceType();
         ChessPosition toPosition = move.getEndPosition();
+
+        if (!gameData.whiteUsername().equals(username) && !gameData.blackUsername().equals(username)) {
+            String errorString = "Error: Observer cannot make moves.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
+            return;
+        }
+
+        boolean isWhiteTurn = game.getTeamTurn().equals(ChessGame.TeamColor.WHITE) && gameData.whiteUsername().equals(username);
+        boolean isBlackTurn = game.getTeamTurn().equals(ChessGame.TeamColor.BLACK) && gameData.blackUsername().equals(username);
+        if (!isWhiteTurn && !isBlackTurn) {
+            String errorString = "Error: Not your turn.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
+            return;
+        }
 
         if (!game.isFinished()) {
             try {
@@ -127,32 +142,32 @@ public class WebSocketHandler {
                 gameDao.updateGame(gameData, game);
 
                 String moveString = String.format("%s moved a %s to %s.", username, piece, toPosition);
-                sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, moveString, null);
-                sendMessage(true, null, ServerMessage.ServerMessageType.LOAD_GAME, null, game);
+                sendMessage(true, username, ServerMessage.ServerMessageType.LOAD_GAME, null, game, true);
+                sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, moveString, null, false);
 
                 if (game.isInCheck(oppositeColor)) {
                     String checkString = String.format("%s is in check!", oppositeColor);
-                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, checkString, null);
+                    sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, checkString, null, true);
                 } else if (game.isInCheckmate(oppositeColor)) {
                     String checkmateString = String.format("Checkmate! %s wins!", username);
-                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, checkmateString, null);
+                    sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, checkmateString, null, true);
 
                     game.setFinished(true);
                     gameDao.updateGame(gameData, game);
                 } else if (game.isInStalemate(oppositeColor)) {
                     String stalemateString = "Stalemate! It's a draw!";
-                    sendMessage(true, null, ServerMessage.ServerMessageType.NOTIFICATION, stalemateString, null);
+                    sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, stalemateString, null, true);
 
                     game.setFinished(true);
                     gameDao.updateGame(gameData, game);
                 }
             } catch (InvalidMoveException e) {
-                String errorString = "Invalid move.";
-                sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null);
+                String errorString = "Error: Invalid move.";
+                sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
             }
         } else {
-            String errorString = "Game already finished.";
-            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null);
+            String errorString = "Error: Game already finished.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
         }
     }
 
@@ -169,7 +184,7 @@ public class WebSocketHandler {
             broadcastString = String.format("%s stopped observing the game.", username);
         }
 
-        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
+        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null, false);
 
         connections.remove(username);
     }
@@ -180,23 +195,34 @@ public class WebSocketHandler {
         GameData gameData = gameDao.getGame(gameID);
         ChessGame currentGame = gameData.game();
 
-        currentGame.setFinished(true);
-        gameDao.updateGame(gameData, currentGame);
+        if (!gameData.whiteUsername().equals(username) && !gameData.blackUsername().equals(username)) {
+            String errorString = "Error: Observer cannot resign.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
+            return;
+        }
 
-        String rootString = "You resigned from the game";
-        sendMessage(false, username, ServerMessage.ServerMessageType.LOAD_GAME, rootString, null);
+        if (!currentGame.isFinished()) {
+            currentGame.setFinished(true);
+            gameDao.updateGame(gameData, currentGame);
 
-        String broadcastString = String.format("%s resigned from the game.", username);
-        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null);
+            String rootString = "You resigned from the game";
+            sendMessage(false, username, ServerMessage.ServerMessageType.NOTIFICATION, rootString, null, false);
+
+            String broadcastString = String.format("%s resigned from the game.", username);
+            sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, broadcastString, null, false);
+        } else {
+            String errorString = "Error: Game already finished.";
+            sendMessage(false, username, ServerMessage.ServerMessageType.ERROR, errorString, null, false);
+        }
     }
 
-    private void sendMessage(boolean isBroadcast, String username, ServerMessage.ServerMessageType type, String message, ChessGame game)
-            throws IOException {
+    private void sendMessage(boolean isBroadcast, String username, ServerMessage.ServerMessageType type, String message,
+                             ChessGame game, boolean toRoot) throws IOException {
         if (type.equals(ServerMessage.ServerMessageType.NOTIFICATION)) {
             NotificationMessage notificationMessage = new NotificationMessage(type, message);
             String messageString = new Gson().toJson(notificationMessage);
             if (isBroadcast) {
-                connections.broadcast(username, messageString);
+                connections.broadcast(username, messageString, toRoot);
             } else {
                 connections.sendToRootClient(username, messageString);
             }
@@ -204,7 +230,7 @@ public class WebSocketHandler {
             LoadGameMessage loadGameMessage = new LoadGameMessage(type, game);
             String messageString = new Gson().toJson(loadGameMessage);
             if (isBroadcast) {
-                connections.broadcast(username, messageString);
+                connections.broadcast(username, messageString, toRoot);
             } else {
                 connections.sendToRootClient(username, messageString);
             }
