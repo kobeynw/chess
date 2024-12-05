@@ -401,21 +401,13 @@ public class ClientUI implements ServerMessageObserver {
                         redrawBoard();
                         break;
                     case 3:
-                        if (!isObserving) {
-                            makeMove(gameID);
-                        } else {
-                            printErrorMessage("Cannot make moves while observing");
-                        }
+                        makeMove(gameID);
                         break;
                     case 4:
                         highlightMoves();
                         break;
                     case 5:
-                        if (!isObserving) {
-                            resign(gameID);
-                        } else {
-                            printErrorMessage("Cannot resign while observing");
-                        }
+                        resign(gameID);
                         break;
                     default:
                         printErrorMessage("Please enter a valid number");
