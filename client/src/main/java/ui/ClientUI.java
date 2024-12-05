@@ -32,28 +32,35 @@ public class ClientUI implements ServerMessageObserver {
     @Override
     public void notify(ServerMessage message) {
         switch (message.getServerMessageType()) {
-            case NOTIFICATION -> printNotification(((NotificationMessage) message).getMessage());
-            case ERROR -> printErrorMessage(((ErrorMessage) message).getErrorMessage());
+            case NOTIFICATION -> printNotification(((NotificationMessage) message).getMessage(), true);
+            case ERROR -> printErrorMessage(((ErrorMessage) message).getErrorMessage(), true);
             case LOAD_GAME -> loadGame(((LoadGameMessage) message).getGame());
         }
     }
 
     private static void welcomeMessage() {
-        out.print("Welcome to " + SET_TEXT_COLOR_BLUE + "240 Chess" + RESET_TEXT_COLOR + "!");
-        out.println("Type the number of the option that you would like to select.");
+        out.println("Welcome to " + SET_TEXT_COLOR_BLUE + "240 Chess" + RESET_TEXT_COLOR + "!");
+        out.println("Type the number of the option that you would like to select.\n");
     }
 
-    private static void printErrorMessage(String errorMsg) {
-        out.println(SET_TEXT_COLOR_RED + errorMsg + RESET_TEXT_COLOR);
+    private static void printErrorMessage(String errorMsg, boolean isSocket) {
+        out.println("\n\n" + SET_TEXT_COLOR_RED + errorMsg + RESET_TEXT_COLOR + "\n");
+        if (isSocket) {
+            out.print("\n[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
+        }
     }
 
-    private static void printNotification(String msg) {
-        out.println(SET_TEXT_COLOR_GREEN + msg + RESET_TEXT_COLOR);
+    private static void printNotification(String msg, boolean isSocket) {
+        out.println("\n\n" + SET_TEXT_COLOR_GREEN + msg + RESET_TEXT_COLOR + "\n");
+        if (isSocket) {
+            out.print("\n[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
+        }
     }
 
     private static void loadGame(ChessGame chessGame) {
         game = chessGame;
         redrawBoard();
+        out.print("\n[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
     }
 
     private static void preLoginDisplay() {
@@ -63,7 +70,6 @@ public class ClientUI implements ServerMessageObserver {
 
         while (!isExiting) {
             out.print("[" + SET_TEXT_COLOR_RED + "LOGGED OUT" + RESET_TEXT_COLOR + "] >>> ");
-
             if (scanner.hasNextInt()) {
                 int input = scanner.nextInt();
                 switch (input) {
@@ -84,11 +90,11 @@ public class ClientUI implements ServerMessageObserver {
                         isExiting = true;
                         break;
                     default:
-                        printErrorMessage("Please enter a valid number");
+                        printErrorMessage("Please enter a valid number", false);
                         break;
                 }
             } else {
-                printErrorMessage("Please enter a valid number");
+                printErrorMessage("Please enter a valid number", false);
                 scanner.next();
             }
         }
@@ -119,14 +125,14 @@ public class ClientUI implements ServerMessageObserver {
             try {
                 RegisterResult registerResult = SERVER_FACADE.register(username, password, email);
                 authToken = registerResult.authToken();
-                out.println("\nSuccessfully logged in as " + registerResult.username());
+                printNotification("Successfully logged in as " + registerResult.username(), false);
                 postLoginDisplay();
             } catch (Exception e) {
-                printErrorMessage(e.getMessage());
+                printErrorMessage(e.getMessage(), false);
                 preLoginDisplay();
             }
         } else {
-            printErrorMessage("Login failed");
+            printErrorMessage("Login failed", false);
             preLoginDisplay();
         }
     }
@@ -150,14 +156,14 @@ public class ClientUI implements ServerMessageObserver {
             try {
                 LoginResult loginResult = SERVER_FACADE.login(username, password);
                 authToken = loginResult.authToken();
-                out.println("\nSuccessfully logged in as " + loginResult.username());
+                printNotification("Successfully logged in as " + loginResult.username(), false);
                 postLoginDisplay();
             } catch (Exception e) {
-                printErrorMessage(e.getMessage());
+                printErrorMessage(e.getMessage(), false);
                 preLoginDisplay();
             }
         } else {
-            printErrorMessage("Login failed");
+            printErrorMessage("Login failed", false);
         }
     }
 
@@ -172,7 +178,6 @@ public class ClientUI implements ServerMessageObserver {
         boolean isLoggedIn = true;
         Scanner scanner = new Scanner(in);
         postLoginHelp();
-
         while (isLoggedIn) {
             out.print("[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
 
@@ -202,11 +207,11 @@ public class ClientUI implements ServerMessageObserver {
                         postLoginHelp();
                         break;
                     default:
-                        printErrorMessage("Please enter a valid number");
+                        printErrorMessage("Please enter a valid number", false);
                         break;
                 }
             } else {
-                printErrorMessage("Please enter a valid number");
+                printErrorMessage("Please enter a valid number", false);
                 scanner.next();
             }
         }
@@ -219,7 +224,7 @@ public class ClientUI implements ServerMessageObserver {
             authToken = null;
             out.println("\nSuccessfully logged out");
         } catch (Exception e) {
-            printErrorMessage(e.getMessage());
+            printErrorMessage(e.getMessage(), false);
         }
     }
 
@@ -238,10 +243,10 @@ public class ClientUI implements ServerMessageObserver {
                 int gameID = createGameResult.gameID();
                 out.println("\nSuccessfully created game:\n* Name: '" + gameName + "'\n* ID: " + gameID);
             } catch (Exception e) {
-                printErrorMessage(e.getMessage());
+                printErrorMessage(e.getMessage(), false);
             }
         } else {
-            printErrorMessage("Game creation failed");
+            printErrorMessage("Game creation failed", false);
         }
     }
 
@@ -250,7 +255,7 @@ public class ClientUI implements ServerMessageObserver {
             ListGamesResult listGamesResult = SERVER_FACADE.listGames(authToken);
             Collection<GameData> games = listGamesResult.games();
             if (games.isEmpty()) {
-                printErrorMessage("No available games");
+                printErrorMessage("No available games", false);
                 return;
             }
 
@@ -270,7 +275,7 @@ public class ClientUI implements ServerMessageObserver {
                 }
             }
         } catch (Exception e) {
-            printErrorMessage(e.getMessage());
+            printErrorMessage(e.getMessage(), false);
         }
     }
 
@@ -301,12 +306,12 @@ public class ClientUI implements ServerMessageObserver {
             try {
                 SERVER_FACADE.playGame(authToken, teamColor, gameID);
                 SERVER_FACADE.connect(authToken, gameID);
-                gameplayDisplay(gameID, false);
+                gameplayDisplay(gameID);
             } catch (Exception e) {
-                printErrorMessage(e.getMessage());
+                printErrorMessage(e.getMessage(), true);
             }
         } else {
-            printErrorMessage("Game join failed");
+            printErrorMessage("Game join failed", false);
         }
     }
 
@@ -323,13 +328,13 @@ public class ClientUI implements ServerMessageObserver {
             try {
                 SERVER_FACADE.connect(authToken, gameID);
             } catch (Exception e) {
-                printErrorMessage(e.getMessage());
+                printErrorMessage(e.getMessage(), true);
             }
 
             teamColor = ChessGame.TeamColor.WHITE;
-            gameplayDisplay(gameID, true);
+            gameplayDisplay(gameID);
         } else {
-            printErrorMessage("Game observation failed");
+            printErrorMessage("Game observation failed", false);
         }
     }
 
@@ -342,11 +347,10 @@ public class ClientUI implements ServerMessageObserver {
         out.println("5. Observe Game");
     }
 
-    private static void gameplayDisplay(int gameID, boolean isObserving) {
+    private static void gameplayDisplay(int gameID) {
         boolean isPlaying = true;
         Scanner scanner = new Scanner(in);
         gameplayHelp();
-
         while (isPlaying) {
             out.print("[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
 
@@ -358,9 +362,7 @@ public class ClientUI implements ServerMessageObserver {
                         gameplayHelp();
                         break;
                     case 1:
-                        if (!isObserving) {
-                            leaveGame(gameID);
-                        }
+                        leaveGame(gameID);
                         isPlaying = false;
                         break;
                     case 2:
@@ -376,11 +378,11 @@ public class ClientUI implements ServerMessageObserver {
                         resign(gameID);
                         break;
                     default:
-                        printErrorMessage("Please enter a valid number");
+                        printErrorMessage("Please enter a valid number", false);
                         break;
                 }
             } else {
-                printErrorMessage("Please enter a valid number");
+                printErrorMessage("Please enter a valid number", false);
                 scanner.next();
             }
         }
@@ -390,7 +392,7 @@ public class ClientUI implements ServerMessageObserver {
         try {
             SERVER_FACADE.leave(authToken, gameID);
         }  catch (Exception e) {
-            printErrorMessage(e.getMessage());
+            printErrorMessage(e.getMessage(), true);
         }
     }
 
@@ -466,7 +468,7 @@ public class ClientUI implements ServerMessageObserver {
         try {
             SERVER_FACADE.makeMove(authToken, gameID, move);
         }  catch (Exception e) {
-            printErrorMessage(e.getMessage());
+            printErrorMessage(e.getMessage(), true);
         }
     }
 
@@ -481,7 +483,7 @@ public class ClientUI implements ServerMessageObserver {
         try {
             SERVER_FACADE.resign(authToken, gameID);
         }  catch (Exception e) {
-            printErrorMessage(e.getMessage());
+            printErrorMessage(e.getMessage(), true);
         }
     }
 
