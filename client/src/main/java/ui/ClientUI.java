@@ -39,26 +39,16 @@ public class ClientUI implements ServerMessageObserver {
     }
 
     private static void welcomeMessage() {
-        out.print("Welcome to ");
-        out.print(SET_TEXT_BOLD);
-        out.print(SET_TEXT_COLOR_BLUE);
-        out.print("240 Chess");
-        out.print(RESET_TEXT_BOLD_FAINT);
-        out.print(RESET_TEXT_COLOR);
-        out.println("!");
+        out.print("Welcome to " + SET_TEXT_COLOR_BLUE + "240 Chess" + RESET_TEXT_COLOR + "!");
         out.println("Type the number of the option that you would like to select.");
     }
 
     private static void printErrorMessage(String errorMsg) {
-        out.println(SET_TEXT_COLOR_RED);
-        out.println(errorMsg);
-        out.println(RESET_TEXT_COLOR);
+        out.println(SET_TEXT_COLOR_RED + errorMsg + RESET_TEXT_COLOR);
     }
 
     private static void printNotification(String msg) {
-        out.println(SET_TEXT_COLOR_GREEN);
-        out.println(msg);
-        out.println(RESET_TEXT_COLOR);
+        out.println(SET_TEXT_COLOR_GREEN + msg + RESET_TEXT_COLOR);
     }
 
     private static void loadGame(ChessGame chessGame) {
@@ -69,19 +59,13 @@ public class ClientUI implements ServerMessageObserver {
     private static void preLoginDisplay() {
         boolean isExiting = false;
         Scanner scanner = new Scanner(in);
-
         preLoginHelp();
 
         while (!isExiting) {
-            out.print("[");
-            out.print(SET_TEXT_COLOR_RED);
-            out.print("LOGGED OUT");
-            out.print(RESET_TEXT_COLOR);
-            out.print("] >>> ");
+            out.print("[" + SET_TEXT_COLOR_RED + "LOGGED OUT" + RESET_TEXT_COLOR + "] >>> ");
 
             if (scanner.hasNextInt()) {
                 int input = scanner.nextInt();
-
                 switch (input) {
                     case 0:
                         out.println("\nType the number of the option that you would like to select.");
@@ -96,7 +80,7 @@ public class ClientUI implements ServerMessageObserver {
                         isExiting = true;
                         break;
                     case 3:
-                        quit();
+                        out.println("\nThanks for playing!");
                         isExiting = true;
                         break;
                     default:
@@ -184,26 +168,16 @@ public class ClientUI implements ServerMessageObserver {
         out.println("3. Quit");
     }
 
-    private static void quit() {
-        out.println("\nThanks for playing!");
-    }
-
     private static void postLoginDisplay() {
         boolean isLoggedIn = true;
         Scanner scanner = new Scanner(in);
-
         postLoginHelp();
 
         while (isLoggedIn) {
-            out.print("[");
-            out.print(SET_TEXT_COLOR_GREEN);
-            out.print("LOGGED IN");
-            out.print(RESET_TEXT_COLOR);
-            out.print("] >>> ");
+            out.print("[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
 
             if (scanner.hasNextInt()) {
                 int input = scanner.nextInt();
-
                 switch (input) {
                     case 0:
                         out.println("\nType the number of the option that you would like to select.");
@@ -236,7 +210,6 @@ public class ClientUI implements ServerMessageObserver {
                 scanner.next();
             }
         }
-
         preLoginDisplay();
     }
 
@@ -328,7 +301,6 @@ public class ClientUI implements ServerMessageObserver {
             try {
                 SERVER_FACADE.playGame(authToken, teamColor, gameID);
                 SERVER_FACADE.connect(authToken, gameID);
-
                 gameplayDisplay(gameID, false);
             } catch (Exception e) {
                 printErrorMessage(e.getMessage());
@@ -373,19 +345,13 @@ public class ClientUI implements ServerMessageObserver {
     private static void gameplayDisplay(int gameID, boolean isObserving) {
         boolean isPlaying = true;
         Scanner scanner = new Scanner(in);
-
         gameplayHelp();
 
         while (isPlaying) {
-            out.print("[");
-            out.print(SET_TEXT_COLOR_GREEN);
-            out.print("LOGGED IN");
-            out.print(RESET_TEXT_COLOR);
-            out.print("] >>> ");
+            out.print("[" + SET_TEXT_COLOR_GREEN + "LOGGED IN" + RESET_TEXT_COLOR + "] >>> ");
 
             if (scanner.hasNextInt()) {
                 int input = scanner.nextInt();
-
                 switch (input) {
                     case 0:
                         out.println("\nType the number of the option that you would like to select.");
@@ -431,7 +397,6 @@ public class ClientUI implements ServerMessageObserver {
     private static void redrawBoard() {
         ChessBoard chessBoard = game.getBoard();
         GameBoardUI boardUI = new GameBoardUI(teamColor, null, chessBoard);
-
         boardUI.drawGame();
     }
 
@@ -442,7 +407,6 @@ public class ClientUI implements ServerMessageObserver {
         String columnLetter;
 
         out.println("Enter the row and column of " + pieceDescription + ". (e.g. row 2, column A)");
-
         out.print("Row >>> ");
         if (scanner.hasNextInt()) {
             row = scanner.nextInt();
@@ -465,14 +429,12 @@ public class ClientUI implements ServerMessageObserver {
                 default -> 1;
             };
         }
-
         return new ChessPosition(row, col);
     }
 
     private static ChessPiece.PieceType getPromotionPiece() {
         out.println("Enter the promotion piece type. (e.g. QUEEN)");
         out.print("Promotion Piece >>> ");
-
         Scanner scanner = new Scanner(in);
         ChessPiece.PieceType promotionPiece = null;
         String promotionInput;
@@ -487,7 +449,6 @@ public class ClientUI implements ServerMessageObserver {
                 default -> null;
             };
         }
-
         return promotionPiece;
     }
 
@@ -513,7 +474,6 @@ public class ClientUI implements ServerMessageObserver {
         ChessPosition position = getPositionInput("the piece to highlight valid moves for");
         ChessBoard chessBoard = game.getBoard();
         GameBoardUI boardUI = new GameBoardUI(teamColor, position, chessBoard);
-
         boardUI.drawGame();
     }
 
