@@ -145,10 +145,7 @@ public class WebSocketHandler {
                 sendMessage(true, username, ServerMessage.ServerMessageType.LOAD_GAME, null, game, true);
                 sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, moveString, null, false);
 
-                if (game.isInCheck(oppositeColor)) {
-                    String checkString = String.format("%s is in check!", oppositeColor);
-                    sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, checkString, null, true);
-                } else if (game.isInCheckmate(oppositeColor)) {
+                if (game.isInCheckmate(oppositeColor)) {
                     String checkmateString = String.format("Checkmate! %s wins!", username);
                     sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, checkmateString, null, true);
 
@@ -160,6 +157,9 @@ public class WebSocketHandler {
 
                     game.setFinished(true);
                     gameDao.updateGame(gameData, game);
+                } else if (game.isInCheck(oppositeColor)) {
+                        String checkString = String.format("%s is in check!", oppositeColor);
+                        sendMessage(true, username, ServerMessage.ServerMessageType.NOTIFICATION, checkString, null, true);
                 }
             } catch (InvalidMoveException e) {
                 String errorString = "Error: Invalid move.";

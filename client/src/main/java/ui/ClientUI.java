@@ -480,10 +480,21 @@ public class ClientUI implements ServerMessageObserver {
     }
 
     private static void resign(int gameID) {
-        try {
-            SERVER_FACADE.resign(authToken, gameID);
-        }  catch (Exception e) {
-            printErrorMessage(e.getMessage(), true);
+        out.println("Are you sure you want to resign?");
+        out.println("(Y/N) >>> ");
+
+        String resignInput;
+        Scanner scanner = new Scanner(in);
+        if (scanner.hasNext()) {
+            resignInput = scanner.next();
+
+            if (resignInput.equalsIgnoreCase("Y") || resignInput.equalsIgnoreCase("YES")) {
+                try {
+                    SERVER_FACADE.resign(authToken, gameID);
+                }  catch (Exception e) {
+                    printErrorMessage(e.getMessage(), true);
+                }
+            }
         }
     }
 
