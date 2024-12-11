@@ -12,9 +12,9 @@ public class ServerFacade {
     private final String httpUrlBase;
     ServerMessageObserver observer;
 
-    public ServerFacade(int port, ServerMessageObserver observer) {
-        this.httpUrlBase = "http://localhost:" + port;
-        String webUrl = "ws://localhost:" + port + "/ws";
+    public ServerFacade(String port, ServerMessageObserver observer) {
+        this.httpUrlBase = "http://" + port;
+        String webUrl = "ws://" + port + "/ws";
         this.observer = observer;
         this.httpComm = new HttpCommunicator();
         this.webComm = new WebsocketCommunicator(observer, webUrl);

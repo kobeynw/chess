@@ -19,12 +19,14 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class ClientUI implements ServerMessageObserver {
-    private static final ServerFacade SERVER_FACADE = new ServerFacade(8080, new ClientUI());
+    private static ServerFacade SERVER_FACADE;
     private static String authToken = null;
     private static ChessGame game = new ChessGame();
     private static ChessGame.TeamColor teamColor = ChessGame.TeamColor.WHITE;
 
-    public static void main(String[] args) {
+    public static void entry(String serverName) {
+        SERVER_FACADE = new ServerFacade(serverName, new ClientUI());
+
         welcomeMessage();
         preLoginDisplay();
     }
